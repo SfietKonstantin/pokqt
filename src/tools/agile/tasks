@@ -1,0 +1,63 @@
+Kanban board
+
+T: to do
+P: in progress
+D: done
+I: integrated
+
+Goal
+----------------------------------------------------------------------------------------------------
+PoQt, a multiplayer Qt based Texas hold-em poker game
+
+Epics
+----------------------------------------------------------------------------------------------------
+* Game logic
+    implement the game logic
+    
+* Network communication
+    implement a network communication system for the game
+
+* Server
+    implement the game server, that handles players and game rules
+
+* Client
+    implements the game client, that can be used by a player to play the game
+
+
+Tasks                                                                  | points  | assignee |T P D I
+----------------------------------------------------------------------------------------------------
+Network communication tasks                                            |         |          |
+----------------------------------------------------------------------------------------------------
+Server class                                                           | ** / ** |          |x
+    simple server class                                                |         |          |
+                                                                       |         |          |
+Client class                                                           | ** / ** |          |x
+    simple client class                                                |         |          |
+                                                                       |         |          |
+Basic protocol                                                         | ** / ** |          |x
+    create a simple set of protocols that can be used to do            |         |          |
+    - heart beat                                                       |         |          |
+    - information about players (connected, disconnected)              |         |          |
+    - chatting                                                         |         |          |
+                                                                       |         |          |
+----------------------------------------------------------------------------------------------------
+Game logic tasks                                                       |         |          |
+----------------------------------------------------------------------------------------------------
+Class for a card                                                       | ** / ** |          |x
+    a class describing a card                                          |         |          |
+                                                                       |         |          |
+Class for a deck of cards                                              | ** / ** |          |x
+    a class describing a deck of cards, with conveninent methods ?     |         |          |
+    - shuffle cards                                                    |         |          |
+    - distribute cards                                                 |         |          |
+                                                                       |         |          |
+Class for the play                                                     | ** / ** |          |x
+    display the cards in play.                                         |         |          |
+                                                                       |         |          |
+Class for a player                                                     | ** / ** |          |x
+    a player is basically a name, maybe a color, and a hand of cards   |         |          |
+    it receives cards, and also have money to bet.                     |         |          |
+                                                                       |         |          |
+Rules management                                                       | ** / ** |          |x
+    be able to tell which combinaison of cards is the best.            |         |          |
+                                                                       |         |          |
