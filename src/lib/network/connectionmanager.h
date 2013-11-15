@@ -29,46 +29,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+#ifndef CONNECTIONMANAGER_H
+#define CONNECTIONMANAGER_H
+
+#include "pokqtnetwork_global.h"
+#include <QtCore/QObject>
 #include "networkclient.h"
-#include <QtCore/QDataStream>
 
-NetworkClient::NetworkClient(QObject *parent)
-    : QTcpSocket(parent)
+class POKQTNETWORKSHARED_EXPORT ConnectionManager : public QObject
 {
-}
+    Q_OBJECT
+    Q_ENUMS(Status)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(QString playerName READ playerName WRITE setPlayerName NOTIFY playerNameChanged)
+public:
+    enum Status {
+        NotConnected,
+        Connecting,
+        Registering,
+        Connected
+    };
+    explicit ConnectionManager(QObject *parent = 0);
+    Status status() const;
+    QString playerName() const;
+    void setPlayerName(const QString &playerName);
+signals:
+    void statusChanged();
+    void playerNameChanged();
+public slots:
+    void connectToHost(const QString &host, int port);
+    void disconnectFromHost();
+private:
+    void setStatus(Status status);
+    void reply(NetworkClient::MessageType type, const QByteArray &data);
+    Status m_status;
+    QString m_playerName;
+    NetworkClient *m_networkClient;
+    int m_nextMessageSize;
+private slots:
+    void slotConnected();
+    void slotError(QAbstractSocket::SocketError error);
+    void slotReadyRead();
+};
 
-void NetworkClient::sendMessage(MessageType messageType, const QByteArray &message)
-{
-    sendMessage(this, messageType, message);
-}
-
-void NetworkClient::sendMessageString(MessageType messageType, const QString &message)
-{
-    sendMessageString(this, messageType, message);
-}
-
-void NetworkClient::sendMessageString(QTcpSocket *socket, MessageType messageType,
-                                      const QString &message)
-{
-    sendMessage(socket, messageType, message.toUtf8());
-}
-
-void NetworkClient::sendMessage(QTcpSocket *socket, MessageType messageType,
-                                const QByteArray &message)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
-
-    stream << (quint16) 0; // Initial size of the packet
-    stream << (quint16) messageType;
-    stream << message;
-
-    // Write size
-    stream.device()->seek(0);
-    stream << (quint16) (data.size() - sizeof(quint16));
-
-    qDebug() << "Send message of size" << (data.size() - sizeof(quint16)) << "containing"
-             << message;
-
-    socket->write(data);
-}
+#endif // CONNECTIONMANAGER_H

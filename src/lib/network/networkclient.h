@@ -36,18 +36,20 @@
 #include "playerproperties.h"
 #include <QtNetwork/QTcpSocket>
 
+// TODO: maybe deprecate
 class POKQTNETWORKSHARED_EXPORT NetworkClient: public QTcpSocket
 {
     Q_OBJECT
 public:
     enum MessageType {
-
+        NameType
     };
     explicit NetworkClient(QObject *parent = 0);
-    QString name() const;
-    void setName(const QString &name);
-private:
-    PlayerProperties m_playerProperties;
+    void sendMessage(MessageType messageType, const QByteArray &message);
+    void sendMessageString(MessageType messageType, const QString &message);
+    static void sendMessage(QTcpSocket *socket, MessageType messageType, const QByteArray &message);
+    static void sendMessageString(QTcpSocket *socket, MessageType messageType,
+                                  const QString &message);
 };
 
 #endif // NETWORKCLIENT_H

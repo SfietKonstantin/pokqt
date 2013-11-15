@@ -29,46 +29,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#include "networkclient.h"
-#include <QtCore/QDataStream>
+#ifndef OSIGNAL_H
+#define OSIGNAL_H
 
-NetworkClient::NetworkClient(QObject *parent)
-    : QTcpSocket(parent)
-{
-}
+#define OSIGNAL(CLASS, NAME, ARGS) \
+    static_cast<void (CLASS::*)(ARGS)>(&CLASS::NAME) 
 
-void NetworkClient::sendMessage(MessageType messageType, const QByteArray &message)
-{
-    sendMessage(this, messageType, message);
-}
-
-void NetworkClient::sendMessageString(MessageType messageType, const QString &message)
-{
-    sendMessageString(this, messageType, message);
-}
-
-void NetworkClient::sendMessageString(QTcpSocket *socket, MessageType messageType,
-                                      const QString &message)
-{
-    sendMessage(socket, messageType, message.toUtf8());
-}
-
-void NetworkClient::sendMessage(QTcpSocket *socket, MessageType messageType,
-                                const QByteArray &message)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
-
-    stream << (quint16) 0; // Initial size of the packet
-    stream << (quint16) messageType;
-    stream << message;
-
-    // Write size
-    stream.device()->seek(0);
-    stream << (quint16) (data.size() - sizeof(quint16));
-
-    qDebug() << "Send message of size" << (data.size() - sizeof(quint16)) << "containing"
-             << message;
-
-    socket->write(data);
-}
+#endif // OSIGNAL_H

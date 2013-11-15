@@ -29,46 +29,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#include "networkclient.h"
-#include <QtCore/QDataStream>
+import QtQuick 2.1
+import QtQuick.Controls 1.0
+import com.ecp.isia.pokqt 1.0
 
-NetworkClient::NetworkClient(QObject *parent)
-    : QTcpSocket(parent)
-{
-}
+Item {
+    width: 300
+    height: 500
 
-void NetworkClient::sendMessage(MessageType messageType, const QByteArray &message)
-{
-    sendMessage(this, messageType, message);
-}
+    ConnectionManager {
+        id: connectionManager
+        playerName: "SK"
+    }
 
-void NetworkClient::sendMessageString(MessageType messageType, const QString &message)
-{
-    sendMessageString(this, messageType, message);
-}
+    Column {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
 
-void NetworkClient::sendMessageString(QTcpSocket *socket, MessageType messageType,
-                                      const QString &message)
-{
-    sendMessage(socket, messageType, message.toUtf8());
-}
+        Button {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "Connect"
+            enabled: connectionManager.status == ConnectionManager.NotConnected
+            onClicked: connectionManager.connectToHost("127.0.0.1", 8008)
+        }
 
-void NetworkClient::sendMessage(QTcpSocket *socket, MessageType messageType,
-                                const QByteArray &message)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
-
-    stream << (quint16) 0; // Initial size of the packet
-    stream << (quint16) messageType;
-    stream << message;
-
-    // Write size
-    stream.device()->seek(0);
-    stream << (quint16) (data.size() - sizeof(quint16));
-
-    qDebug() << "Send message of size" << (data.size() - sizeof(quint16)) << "containing"
-             << message;
-
-    socket->write(data);
+        Button {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "Disconnect"
+            enabled: connectionManager.status == ConnectionManager.Connected
+            onClicked: connectionManager.disconnectFromHost()
+        }
+    }
 }

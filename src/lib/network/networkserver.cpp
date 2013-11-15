@@ -31,8 +31,10 @@
 
 #include "networkserver.h"
 #include <QtCore/QDebug>
+#include <QtCore/QDataStream>
 #include <QtNetwork/QTcpServer>
 #include <QtNetwork/QTcpSocket>
+#include "networkclient.h"
 
 static const char *NET_TYPE = "net";
 
@@ -59,12 +61,25 @@ void NetworkServer::stopServer()
     close();
 }
 
+void NetworkServer::reply(QTcpSocket *socket, NetworkClient::MessageType type,
+                          const QByteArray &data)
+{
+    switch (type) {
+    case NetworkClient::NameType:
+        // We send the same data back to the sender
+        // this is the registration method
+        NetworkClient::sendMessage(socket, NetworkClient::NameType, data);
+        break;
+    }
+}
+
 void NetworkServer::slotNewConnection()
 {
     QTcpSocket *socket = nextPendingConnection();
 
     qDebug() << "Received connection" << socket;
     connect(socket, &QTcpSocket::disconnected, this, &NetworkServer::slotDisconnected);
+    connect(socket, &QTcpSocket::readyRead, this, &NetworkServer::slotReadyRead);
 
     m_sockets.append(socket);
     m_playerProperties.insert(socket, PlayerProperties());
@@ -90,4 +105,49 @@ void NetworkServer::slotDisconnected()
 
 
     emit sendMessage(NET_TYPE, "Disconnection");
+}
+
+void NetworkServer::slotReadyRead()
+{
+    QTcpSocket *socket = qobject_cast<QTcpSocket *>(sender());
+    if (!socket) {
+        return;
+    }
+
+    qDebug() << "Received data from" << socket;
+
+    if (!m_sockets.contains(socket)) {
+        return;
+    }
+
+    if (!m_nextMessageSize.contains(socket)) {
+        // We read the size of the message
+        if ((uint) socket->bytesAvailable() < sizeof(quint16)) {
+            return;
+        }
+
+        QDataStream in(socket);
+        quint16 size;
+        in >> size;
+
+        m_nextMessageSize.insert(socket, size);
+        qDebug() << "Next message from" << socket << "will be size of" << size;
+    }
+
+    // We read the content of the socket
+    int size = m_nextMessageSize.value(socket);
+    if (socket->bytesAvailable() < size) {
+        return;
+    }
+
+    QDataStream in (socket);
+    quint16 typeInt;
+    QByteArray data;
+    in >> typeInt;
+    in >> data;
+    NetworkClient::MessageType type = (NetworkClient::MessageType) typeInt;
+    qDebug() << "Received data from" << socket << type << data;
+    m_nextMessageSize.remove(socket);
+
+    reply(socket, type, data);
 }
