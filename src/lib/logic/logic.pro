@@ -3,7 +3,7 @@ TARGET = logic
 
 QT = core
 
-DEFINES += POQTLOGIC_LIBRARY
+DEFINES += POKQTLOGIC_LIBRARY
 
-HEADERS += poqtlogic_global.h
+HEADERS += pokqtlogic_global.h
 a

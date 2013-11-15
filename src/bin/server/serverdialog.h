@@ -12,8 +12,8 @@
  *     notice, this list of conditions and the following disclaimer in
  *     the documentation and/or other materials provided with the
  *     distribution.
- *   * The names of its contributors may not be used to endorse or promote 
- *     products derived from this software without specific prior written 
+ *   * The names of its contributors may not be used to endorse or promote
+ *     products derived from this software without specific prior written
  *     permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -27,17 +27,34 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
- */ 
+ */
 
-#ifndef POQTNETWORK_GLOBAL_H
-#define POQTNETWORK_GLOBAL_H
+#ifndef SERVERDIALOG_H
+#define SERVERDIALOG_H
 
-#include <QtCore/qglobal.h>
+#include <QDialog>
 
-#if defined(POQTNETWORK_LIBRARY)
-#  define POQTNETWORKSHARED_EXPORT Q_DECL_EXPORT
-#else
-#  define POQTNETWORKSHARED_EXPORT Q_DECL_IMPORT
-#endif
+namespace Ui {
+class ServerDialog;
+}
 
-#endif // POQTNETWORK_GLOBAL_H
+class ServerDialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+    explicit ServerDialog(QWidget *parent = 0);
+    virtual ~ServerDialog();
+signals:
+    void start(int port);
+    void stop();
+public slots:
+    void writeMessage(const QString &type, const QString &message);
+private slots:
+    void startClicked();
+    void stopClicked();
+private:
+    Ui::ServerDialog *ui;
+};
+
+#endif // SERVERDIALOG_H

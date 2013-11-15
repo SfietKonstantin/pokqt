@@ -1,7 +1,16 @@
 TEMPLATE = app
-TARGET = poqt-server
+TARGET = pokqt-server
 
-QT = core gui widgets
+QT = core gui network widgets
+INCLUDEPATH+=../../lib/network
+LIBS+=-L../../lib/network -lpokqtnetwork
 
 SOURCES += \
-    main.cpp
+    main.cpp \
+    serverdialog.cpp
+
+FORMS += \
+    serverdialog.ui
+
+HEADERS += \
+    serverdialog.h

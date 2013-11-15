@@ -12,8 +12,8 @@
  *     notice, this list of conditions and the following disclaimer in
  *     the documentation and/or other materials provided with the
  *     distribution.
- *   * The names of its contributors may not be used to endorse or promote 
- *     products derived from this software without specific prior written 
+ *   * The names of its contributors may not be used to endorse or promote
+ *     products derived from this software without specific prior written
  *     permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -27,19 +27,34 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
- */ 
+ */
 
-#include <QtGui/QGuiApplication>
-#include <QtNetwork/QTcpSocket>
-#include <QtNetwork/QHostAddress>
+#ifndef NETWORKSERVER_H
+#define NETWORKSERVER_H
 
-int main(int argc, char **argv)
+#include "pokqtnetwork_global.h"
+#include "playerproperties.h"
+#include <QtNetwork/QTcpServer>
+
+class QTcpSocket;
+class POKQTNETWORKSHARED_EXPORT NetworkServer: public QTcpServer
 {
-    QGuiApplication app (argc, argv);
+    Q_OBJECT
+public:
+    explicit NetworkServer(QObject *parent = 0);
+signals:
+    void sendMessage(const QString &type, const QString &message);
+public slots:
+    void startServer(int port);
+    void stopServer();
+private:
+    QHostAddress m_address;
+    int m_port;
+    QList<QTcpSocket *> m_sockets;
+    QMap<QTcpSocket *, PlayerProperties> m_playerProperties;
+private slots:
+    void slotNewConnection();
+    void slotDisconnected();
+};
 
-    QTcpSocket tcpSocket;
-    tcpSocket.connectToHost(QHostAddress::LocalHost, 8008);
-//    tcpSocket.disconnectFromHost();
-
-    return app.exec();
-}
+#endif // NETWORKSERVER_H

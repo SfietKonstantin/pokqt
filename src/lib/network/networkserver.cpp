@@ -29,23 +29,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#include <QtWidgets/QApplication>
-#include <networkserver.h>
+#include "networkserver.h"
+#include <QtCore/QDebug>
+#include <QtNetwork/QTcpServer>
+#include <QtNetwork/QTcpSocket>
 
-#include "serverdialog.h"
+static const char *NET_TYPE = "net";
 
-int main(int argc, char **argv)
+NetworkServer::NetworkServer(QObject *parent)
+    : QTcpServer(parent)
 {
-    QApplication app (argc, argv);
+    connect(this, &NetworkServer::newConnection, this, &NetworkServer::slotNewConnection);
+}
 
-    ServerDialog dialog;
-    NetworkServer server;
+void NetworkServer::startServer(int port)
+{
+    listen(QHostAddress::Any, port);
+}
 
-    QObject::connect(&server, &NetworkServer::sendMessage, &dialog, &ServerDialog::writeMessage);
-    QObject::connect(&dialog, &ServerDialog::start, &server, &NetworkServer::startServer);
-    QObject::connect(&dialog, &ServerDialog::stop, &server, &NetworkServer::stopServer);
+void NetworkServer::stopServer()
+{
+    foreach (QTcpSocket *socket, m_sockets) {
+        socket->close();
+        socket->deleteLater();
+    }
 
-    dialog.show();
+    m_sockets.clear();
+    m_playerProperties.clear();
+    close();
+}
 
-    return app.exec();
+void NetworkServer::slotNewConnection()
+{
+    QTcpSocket *socket = nextPendingConnection();
+
+    qDebug() << "Received connection" << socket;
+    connect(socket, &QTcpSocket::disconnected, this, &NetworkServer::slotDisconnected);
+
+    m_sockets.append(socket);
+    m_playerProperties.insert(socket, PlayerProperties());
+
+    emit sendMessage(NET_TYPE, "New connection");
+}
+
+void NetworkServer::slotDisconnected()
+{
+    QTcpSocket *socket = qobject_cast<QTcpSocket *>(sender());
+    if (!socket) {
+        return;
+    }
+
+    qDebug() << "Received disconnection from" << socket;
+
+    if (m_sockets.contains(socket)) {
+        m_playerProperties.remove(socket);
+        m_sockets.removeAll(socket);
+    }
+
+    socket->deleteLater();
+
+
+    emit sendMessage(NET_TYPE, "Disconnection");
 }

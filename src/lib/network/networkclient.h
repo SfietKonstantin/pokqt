@@ -12,8 +12,8 @@
  *     notice, this list of conditions and the following disclaimer in
  *     the documentation and/or other materials provided with the
  *     distribution.
- *   * The names of its contributors may not be used to endorse or promote 
- *     products derived from this software without specific prior written 
+ *   * The names of its contributors may not be used to endorse or promote
+ *     products derived from this software without specific prior written
  *     permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -27,19 +27,27 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
- */ 
+ */
 
-#include <QtGui/QGuiApplication>
+#ifndef NETWORKCLIENT_H
+#define NETWORKCLIENT_H
+
+#include "pokqtnetwork_global.h"
+#include "playerproperties.h"
 #include <QtNetwork/QTcpSocket>
-#include <QtNetwork/QHostAddress>
 
-int main(int argc, char **argv)
+class POKQTNETWORKSHARED_EXPORT NetworkClient: public QTcpSocket
 {
-    QGuiApplication app (argc, argv);
+    Q_OBJECT
+public:
+    enum MessageType {
 
-    QTcpSocket tcpSocket;
-    tcpSocket.connectToHost(QHostAddress::LocalHost, 8008);
-//    tcpSocket.disconnectFromHost();
+    };
+    explicit NetworkClient(QObject *parent = 0);
+    QString name() const;
+    void setName(const QString &name);
+private:
+    PlayerProperties m_playerProperties;
+};
 
-    return app.exec();
-}
+#endif // NETWORKCLIENT_H

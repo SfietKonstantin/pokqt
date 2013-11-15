@@ -29,17 +29,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */ 
 
-#include <QtGui/QGuiApplication>
-#include <QtNetwork/QTcpSocket>
-#include <QtNetwork/QHostAddress>
+#ifndef POKQTNETWORK_GLOBAL_H
+#define POKQTNETWORK_GLOBAL_H
 
-int main(int argc, char **argv)
-{
-    QGuiApplication app (argc, argv);
+#include <QtCore/qglobal.h>
 
-    QTcpSocket tcpSocket;
-    tcpSocket.connectToHost(QHostAddress::LocalHost, 8008);
-//    tcpSocket.disconnectFromHost();
+#if defined(POKQTNETWORK_LIBRARY)
+#  define POKQTNETWORKSHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define POKQTNETWORKSHARED_EXPORT Q_DECL_IMPORT
+#endif
 
-    return app.exec();
-}
+#endif // POKQTNETWORK_GLOBAL_H

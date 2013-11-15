@@ -12,8 +12,8 @@
  *     notice, this list of conditions and the following disclaimer in
  *     the documentation and/or other materials provided with the
  *     distribution.
- *   * The names of its contributors may not be used to endorse or promote 
- *     products derived from this software without specific prior written 
+ *   * The names of its contributors may not be used to endorse or promote
+ *     products derived from this software without specific prior written
  *     permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -27,19 +27,40 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
- */ 
+ */
 
-#include <QtGui/QGuiApplication>
-#include <QtNetwork/QTcpSocket>
-#include <QtNetwork/QHostAddress>
+#include "serverdialog.h"
+#include "ui_serverdialog.h"
 
-int main(int argc, char **argv)
+ServerDialog::ServerDialog(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::ServerDialog)
 {
-    QGuiApplication app (argc, argv);
+    ui->setupUi(this);
+    connect(ui->startPushButton, &QPushButton::clicked, this, &ServerDialog::startClicked);
+    connect(ui->stopPushButton, &QPushButton::clicked, this, &ServerDialog::stopClicked);
+}
 
-    QTcpSocket tcpSocket;
-    tcpSocket.connectToHost(QHostAddress::LocalHost, 8008);
-//    tcpSocket.disconnectFromHost();
+ServerDialog::~ServerDialog()
+{
+    delete ui;
+}
 
-    return app.exec();
+void ServerDialog::writeMessage(const QString &type, const QString &message)
+{
+    ui->textBrowser->append(QString("[%1] %2").arg(type, message));
+}
+
+void ServerDialog::startClicked()
+{
+    ui->startPushButton->setEnabled(false);
+    ui->stopPushButton->setEnabled(true);
+    emit start(ui->portSpinBox->value());
+}
+
+void ServerDialog::stopClicked()
+{
+    ui->startPushButton->setEnabled(true);
+    ui->stopPushButton->setEnabled(false);
+    emit stop();
 }

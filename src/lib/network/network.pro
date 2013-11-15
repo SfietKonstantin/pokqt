@@ -1,9 +1,16 @@
 TEMPLATE = lib
-TARGET = network
+TARGET = pokqtnetwork
 
 QT = core
 
-DEFINES += POQTNETWORK_LIBRARY
+DEFINES += POKQTNETWORK_LIBRARY
 
-HEADERS += poqtnetwork_global.h
-a
+HEADERS += pokqtnetwork_global.h \
+    networkserver.h \
+    networkclient.h \
+    playerproperties.h
+
+SOURCES += \
+    networkserver.cpp \
+    networkclient.cpp \
+    playerproperties.cpp
