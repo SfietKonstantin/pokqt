@@ -29,26 +29,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef PLAYERPROPERTIES_H
-#define PLAYERPROPERTIES_H
+#ifndef HELPERS_H
+#define HELPERS_H
 
-#include <QtCore/QString>
+#include <QtCore/QDebug>
+#include <QtCore/QDataStream>
+#include <QtNetwork/QTcpSocket>
 
-class PlayerProperties
-{
-public:
+// Todo: rename to globals or something like that
 
-    explicit PlayerProperties();
-    QString name() const;
-    void setName(const QString &name);
-    int tokens() const;
-    void setTokens(int tokens);
-private:
-    QString m_name;
-    int m_tokens;
+enum MessageType {
+    PlayerType,
+    ChatType
 };
 
-QDataStream &operator <<(QDataStream &stream, const PlayerProperties &playerProperties);
-QDataStream &operator >>(QDataStream &stream, PlayerProperties &playerProperties);
+inline static void sendMessage(QTcpSocket *socket, MessageType messageType,
+                               const QByteArray &message)
+{
+    QByteArray data;
+    QDataStream stream (&data, QIODevice::WriteOnly);
 
-#endif // PLAYERPROPERTIES_H
+    stream << (quint16) 0; // Initial size of the packet
+    stream << (quint16) messageType;
+    stream << message;
+
+    // Write size
+    stream.device()->seek(0);
+    stream << (quint16) (data.size() - sizeof(quint16));
+
+    qDebug() << "Send message of size" << (data.size() - sizeof(quint16));
+
+    socket->write(data);
+}
+
+inline static void sendMessageString(QTcpSocket *socket, MessageType messageType,
+                                     const QString &message)
+{
+   sendMessage(socket, messageType, message.toUtf8());
+}
+
+
+#endif // HELPERS_H

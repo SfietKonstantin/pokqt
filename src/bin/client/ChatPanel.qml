@@ -29,27 +29,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef NETWORKCLIENT_H
-#define NETWORKCLIENT_H
+import QtQuick 2.0
+import QtQuick.Controls 1.0
 
-#include "pokqtnetwork_global.h"
-#include "playerproperties.h"
-#include <QtNetwork/QTcpSocket>
+Item {
+    width: 200
+    function appendChatMessage(name, message) {
+        chat.text.trim()
+        chat.text += "<strong>" + name + "</strong>: " + message + "<br/>"
+    }
 
-// TODO: maybe deprecate
-class POKQTNETWORKSHARED_EXPORT NetworkClient: public QTcpSocket
-{
-    Q_OBJECT
-public:
-    enum MessageType {
-        NameType
-    };
-    explicit NetworkClient(QObject *parent = 0);
-    void sendMessage(MessageType messageType, const QByteArray &message);
-    void sendMessageString(MessageType messageType, const QString &message);
-    static void sendMessage(QTcpSocket *socket, MessageType messageType, const QByteArray &message);
-    static void sendMessageString(QTcpSocket *socket, MessageType messageType,
-                                  const QString &message);
-};
+    TextArea {
+        id: chat
+        readOnly: true
+        textFormat: TextEdit.RichText
+        anchors.left:parent.left; anchors.right:parent.right
+        anchors.top: parent.top; anchors.bottom: field.top
+        onTextChanged: {
+            var flickable = chat.flickableItem
+            if (flickable.contentHeight > flickable.height) {
+                flickable.contentY = (flickable.contentHeight - flickable.height)
+            }
+        }
+    }
 
-#endif // NETWORKCLIENT_H
+
+    TextField {
+        id: field
+        anchors.left:parent.left; anchors.right:parent.right
+        anchors.bottom: parent.bottom
+        onAccepted: {
+            var message = field.text.trim()
+            if (message == "") {
+                return
+            }
+
+            connectionManager.sendChat(field.text)
+            field.text = ""
+        }
+    }
+}

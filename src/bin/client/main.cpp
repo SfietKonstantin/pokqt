@@ -30,16 +30,31 @@
  */ 
 
 #include <QtGui/QGuiApplication>
-#include <QtNetwork/QTcpSocket>
-#include <QtNetwork/QHostAddress>
+#include <QtQml/qqml.h>
+#include <QtQml/QQmlEngine>
+#include <QtQuick/QQuickView>
+#include <connectionmanager.h>
+
+// "Functor" to be used in Qt compile-time check "connect"
+// Connecting to QCoreApplication::quit fails, because it is
+// a static slot.
+void quit()
+{
+    QCoreApplication::instance()->quit();
+}
 
 int main(int argc, char **argv)
 {
     QGuiApplication app (argc, argv);
 
-    QTcpSocket tcpSocket;
-    tcpSocket.connectToHost(QHostAddress::LocalHost, 8008);
-//    tcpSocket.disconnectFromHost();
+    QQuickView view;
+    QObject::connect(view.engine(), &QQmlEngine::quit, quit);
+
+    qmlRegisterType<ConnectionManager>("com.ecp.isia.pokqt", 1, 0, "ConnectionManager");
+
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
+    view.setSource(QUrl("qrc:/main.qml"));
+    view.show();
 
     return app.exec();
 }

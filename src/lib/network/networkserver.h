@@ -33,26 +33,29 @@
 #define NETWORKSERVER_H
 
 #include "pokqtnetwork_global.h"
-#include "networkclient.h"
+#include "helpers.h"
 #include "playerproperties.h"
-#include <QtNetwork/QTcpServer>
+#include <QtNetwork/QHostAddress>
 
-// TODO: encapsulate with a QObject
 class QTcpSocket;
-class POKQTNETWORKSHARED_EXPORT NetworkServer: public QTcpServer
+class QTcpServer;
+class POKQTNETWORKSHARED_EXPORT NetworkServer: public QObject
 {
     Q_OBJECT
 public:
     explicit NetworkServer(QObject *parent = 0);
 signals:
-    void sendMessage(const QString &type, const QString &message);
+    void displayMessage(const QString &type, const QString &message);
 public slots:
     void startServer(int port);
     void stopServer();
 private:
-    void reply(QTcpSocket *socket, NetworkClient::MessageType type, const QByteArray &data);
+    void reply(QTcpSocket *socket, MessageType type, const QByteArray &data);
+    void replyPlayers();
+    void replyChat(QTcpSocket *socket, const QByteArray &data);
     QHostAddress m_address;
     int m_port;
+    QTcpServer *m_server;
     QList<QTcpSocket *> m_sockets;
     QMap<QTcpSocket *, PlayerProperties> m_playerProperties;
     QMap<QTcpSocket *, quint16> m_nextMessageSize;

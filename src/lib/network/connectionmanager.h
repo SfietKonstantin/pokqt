@@ -33,8 +33,11 @@
 #define CONNECTIONMANAGER_H
 
 #include "pokqtnetwork_global.h"
+#include "helpers.h"
+#include "playerproperties.h"
 #include <QtCore/QObject>
-#include "networkclient.h"
+#include <QtCore/QStringList>
+#include <QtNetwork/QTcpSocket>
 
 class POKQTNETWORKSHARED_EXPORT ConnectionManager : public QObject
 {
@@ -56,15 +59,19 @@ public:
 signals:
     void statusChanged();
     void playerNameChanged();
+    void chatReceived(const QString &playerName, const QString &chat);
 public slots:
     void connectToHost(const QString &host, int port);
     void disconnectFromHost();
+    void sendChat(const QString &chat);
 private:
     void setStatus(Status status);
-    void reply(NetworkClient::MessageType type, const QByteArray &data);
+    void reply(MessageType type, const QByteArray &data);
     Status m_status;
+    int m_index;
+    QList<PlayerProperties> m_players;
     QString m_playerName;
-    NetworkClient *m_networkClient;
+    QTcpSocket *m_socket;
     int m_nextMessageSize;
 private slots:
     void slotConnected();

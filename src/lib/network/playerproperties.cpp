@@ -30,8 +30,10 @@
  */
 
 #include "playerproperties.h"
+#include <QtCore/QDataStream>
 
 PlayerProperties::PlayerProperties()
+    : m_tokens(0)
 {
 }
 
@@ -43,4 +45,30 @@ QString PlayerProperties::name() const
 void PlayerProperties::setName(const QString &name)
 {
     m_name = name;
+}
+
+int PlayerProperties::tokens() const
+{
+    return m_tokens;
+}
+
+void PlayerProperties::setTokens(int tokens)
+{
+    m_tokens = tokens;
+}
+
+QDataStream &operator<<(QDataStream &stream, const PlayerProperties &playerProperties)
+{
+    stream << playerProperties.name() << (qint32) playerProperties.tokens();
+    return stream;
+}
+
+QDataStream &operator >>(QDataStream &stream, PlayerProperties &playerProperties)
+{
+    QString name;
+    qint32 tokens;
+    stream >> name >> tokens;
+    playerProperties.setName(name);
+    playerProperties.setTokens((int) tokens);
+    return stream;
 }

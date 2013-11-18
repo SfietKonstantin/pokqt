@@ -49,7 +49,7 @@ signals:
     void start(int port);
     void stop();
 public slots:
-    void writeMessage(const QString &type, const QString &message);
+    void displayMessage(const QString &type, const QString &message);
 private slots:
     void startClicked();
     void stopClicked();

@@ -46,7 +46,7 @@ ServerDialog::~ServerDialog()
     delete ui;
 }
 
-void ServerDialog::writeMessage(const QString &type, const QString &message)
+void ServerDialog::displayMessage(const QString &type, const QString &message)
 {
     ui->textBrowser->append(QString("[%1] %2").arg(type, message));
 }

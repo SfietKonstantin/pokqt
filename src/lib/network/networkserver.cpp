@@ -34,19 +34,20 @@
 #include <QtCore/QDataStream>
 #include <QtNetwork/QTcpServer>
 #include <QtNetwork/QTcpSocket>
-#include "networkclient.h"
 
 static const char *NET_TYPE = "net";
+static const char *CHAT_TYPE = "chat";
 
 NetworkServer::NetworkServer(QObject *parent)
-    : QTcpServer(parent)
+    : QObject(parent)
 {
-    connect(this, &NetworkServer::newConnection, this, &NetworkServer::slotNewConnection);
+    m_server = new QTcpServer(this);
+    connect(m_server, &QTcpServer::newConnection, this, &NetworkServer::slotNewConnection);
 }
 
 void NetworkServer::startServer(int port)
 {
-    listen(QHostAddress::Any, port);
+    m_server->listen(QHostAddress::Any, port);
 }
 
 void NetworkServer::stopServer()
@@ -58,24 +59,64 @@ void NetworkServer::stopServer()
 
     m_sockets.clear();
     m_playerProperties.clear();
-    close();
+    m_server->close();
 }
 
-void NetworkServer::reply(QTcpSocket *socket, NetworkClient::MessageType type,
-                          const QByteArray &data)
+void NetworkServer::reply(QTcpSocket *socket, MessageType type, const QByteArray &data)
 {
     switch (type) {
-    case NetworkClient::NameType:
-        // We send the same data back to the sender
-        // this is the registration method
-        NetworkClient::sendMessage(socket, NetworkClient::NameType, data);
+    case PlayerType:
+        // Set the name
+        m_playerProperties[socket].setName(QString::fromUtf8(data));
+        m_playerProperties[socket].setTokens(1000); // TODO: variable number of tokens
+        replyPlayers();
         break;
+    case ChatType:
+        replyChat(socket, data);
+        break;
+    }
+}
+
+void NetworkServer::replyPlayers()
+{
+    QList<PlayerProperties> players;
+
+    // Build the list of players
+    foreach (QTcpSocket *storedSocket, m_sockets) {
+        // If we have a socket that did not registered names yet,
+        // we put a placeholder empty string
+        players.append(m_playerProperties.value(storedSocket));
+    }
+
+    // Send the data to each socket
+    for (int i = 0; i< m_sockets.count(); ++i) {
+        QByteArray data;
+        QDataStream stream (&data, QIODevice::WriteOnly);
+        stream << i << players;
+        sendMessage(m_sockets[i], PlayerType, data);
+    }
+}
+
+void NetworkServer::replyChat(QTcpSocket *socket, const QByteArray &data)
+{
+    // Get name
+    QString name = m_playerProperties[socket].name();
+    QString chat = QString::fromUtf8(data);
+
+    QByteArray newData;
+    QDataStream stream (&newData, QIODevice::WriteOnly);
+    stream << name << chat;
+
+    displayMessage(CHAT_TYPE, QString("%1: %2").arg(name, chat));
+
+    foreach (QTcpSocket *playerSocket, m_sockets) {
+        sendMessage(playerSocket, ChatType, newData);
     }
 }
 
 void NetworkServer::slotNewConnection()
 {
-    QTcpSocket *socket = nextPendingConnection();
+    QTcpSocket *socket = m_server->nextPendingConnection();
 
     qDebug() << "Received connection" << socket;
     connect(socket, &QTcpSocket::disconnected, this, &NetworkServer::slotDisconnected);
@@ -84,7 +125,7 @@ void NetworkServer::slotNewConnection()
     m_sockets.append(socket);
     m_playerProperties.insert(socket, PlayerProperties());
 
-    emit sendMessage(NET_TYPE, "New connection");
+    emit displayMessage(NET_TYPE, "New connection");
 }
 
 void NetworkServer::slotDisconnected()
@@ -98,13 +139,16 @@ void NetworkServer::slotDisconnected()
 
     if (m_sockets.contains(socket)) {
         m_playerProperties.remove(socket);
+        m_nextMessageSize.remove(socket);
         m_sockets.removeAll(socket);
     }
 
     socket->deleteLater();
 
+    emit displayMessage(NET_TYPE, "Disconnection");
 
-    emit sendMessage(NET_TYPE, "Disconnection");
+    // Send the new list of players
+    replyPlayers();
 }
 
 void NetworkServer::slotReadyRead()
@@ -145,7 +189,7 @@ void NetworkServer::slotReadyRead()
     QByteArray data;
     in >> typeInt;
     in >> data;
-    NetworkClient::MessageType type = (NetworkClient::MessageType) typeInt;
+    MessageType type = (MessageType) typeInt;
     qDebug() << "Received data from" << socket << type << data;
     m_nextMessageSize.remove(socket);
 

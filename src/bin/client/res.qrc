@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>assets/background.jpg</file>
+        <file>ConnectDialog.qml</file>
+        <file>ChatPanel.qml</file>
+    </qresource>
+</RCC>

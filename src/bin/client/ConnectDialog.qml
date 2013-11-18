@@ -29,26 +29,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef PLAYERPROPERTIES_H
-#define PLAYERPROPERTIES_H
+import QtQuick 2.0
+import QtQuick.Controls 1.0
 
-#include <QtCore/QString>
+Column {
+    id: container
+    signal connectToHost(string ip, int port, string nickname)
 
-class PlayerProperties
-{
-public:
+    TextField {
+        id: nickname
+        placeholderText: qsTr("Nickname")
+        text: "SK"
+    }
 
-    explicit PlayerProperties();
-    QString name() const;
-    void setName(const QString &name);
-    int tokens() const;
-    void setTokens(int tokens);
-private:
-    QString m_name;
-    int m_tokens;
-};
+    TextField {
+        id: ip
+        placeholderText: qsTr("Server IP address")
+        text: "127.0.0.1"
+    }
 
-QDataStream &operator <<(QDataStream &stream, const PlayerProperties &playerProperties);
-QDataStream &operator >>(QDataStream &stream, PlayerProperties &playerProperties);
+    TextField {
+        id: port
+        placeholderText: qsTr("Port")
+        text: "8008"
+    }
 
-#endif // PLAYERPROPERTIES_H
+    Button {
+        enabled: nickname.text != "" && ip.text != "" && port.text != ""
+        text: qsTr("Connect")
+        onClicked: container.connectToHost(ip.text, port.text, nickname.text)
+    }
+
+    Button {
+        text: qsTr("Quit")
+        onClicked: Qt.quit()
+    }
+}

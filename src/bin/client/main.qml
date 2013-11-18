@@ -29,46 +29,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#include "networkclient.h"
-#include <QtCore/QDataStream>
+import QtQuick 2.0
+import com.ecp.isia.pokqt 1.0
 
-NetworkClient::NetworkClient(QObject *parent)
-    : QTcpSocket(parent)
-{
-}
+Item {
+    width: 800
+    height: 600
 
-void NetworkClient::sendMessage(MessageType messageType, const QByteArray &message)
-{
-    sendMessage(this, messageType, message);
-}
+    Image {
+        anchors.fill: parent
+        source: "assets/background.jpg"
+    }
 
-void NetworkClient::sendMessageString(MessageType messageType, const QString &message)
-{
-    sendMessageString(this, messageType, message);
-}
+    ConnectionManager {
+        id: connectionManager
+        onChatReceived: chatPanel.appendChatMessage(playerName, chat)
+    }
 
-void NetworkClient::sendMessageString(QTcpSocket *socket, MessageType messageType,
-                                      const QString &message)
-{
-    sendMessage(socket, messageType, message.toUtf8());
-}
+    ChatPanel {
+        id: chatPanel
+        visible: connectionManager.status == ConnectionManager.Connected
+        anchors.top: parent.top; anchors.bottom: parent.bottom
+        anchors.right: parent.right
+    }
 
-void NetworkClient::sendMessage(QTcpSocket *socket, MessageType messageType,
-                                const QByteArray &message)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
-
-    stream << (quint16) 0; // Initial size of the packet
-    stream << (quint16) messageType;
-    stream << message;
-
-    // Write size
-    stream.device()->seek(0);
-    stream << (quint16) (data.size() - sizeof(quint16));
-
-    qDebug() << "Send message of size" << (data.size() - sizeof(quint16)) << "containing"
-             << message;
-
-    socket->write(data);
+    ConnectDialog {
+        visible: connectionManager.status == ConnectionManager.NotConnected
+        anchors.centerIn: parent
+        onConnectToHost: {
+            connectionManager.playerName = nickname
+            connectionManager.connectToHost(ip, port)
+        }
+    }
 }

@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     ServerDialog dialog;
     NetworkServer server;
 
-    QObject::connect(&server, &NetworkServer::sendMessage, &dialog, &ServerDialog::writeMessage);
+    QObject::connect(&server, &NetworkServer::displayMessage, &dialog, &ServerDialog::displayMessage);
     QObject::connect(&dialog, &ServerDialog::start, &server, &NetworkServer::startServer);
     QObject::connect(&dialog, &ServerDialog::stop, &server, &NetworkServer::stopServer);
 

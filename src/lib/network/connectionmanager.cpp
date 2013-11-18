@@ -37,11 +37,12 @@
 ConnectionManager::ConnectionManager(QObject *parent) :
     QObject(parent), m_status(NotConnected), m_nextMessageSize(-1)
 {
-    m_networkClient = new NetworkClient(this);
-    connect(m_networkClient, &NetworkClient::connected, this, &ConnectionManager::slotConnected);
-    connect(m_networkClient, OSIGNAL(NetworkClient, error, QAbstractSocket::SocketError),
+    m_index = -1;
+    m_socket = new QTcpSocket(this);
+    connect(m_socket, &QTcpSocket::connected, this, &ConnectionManager::slotConnected);
+    connect(m_socket, OSIGNAL(QTcpSocket, error, QAbstractSocket::SocketError),
             this, &ConnectionManager::slotError);
-    connect(m_networkClient, &NetworkClient::readyRead, this, &ConnectionManager::slotReadyRead);
+    connect(m_socket, &QTcpSocket::readyRead, this, &ConnectionManager::slotReadyRead);
 }
 
 ConnectionManager::Status ConnectionManager::status() const
@@ -69,13 +70,20 @@ void ConnectionManager::setPlayerName(const QString &playerName)
 void ConnectionManager::connectToHost(const QString &host, int port)
 {
     setStatus(Connecting);
-    m_networkClient->connectToHost(QHostAddress(host), port);
+    m_socket->connectToHost(QHostAddress(host), port);
 }
 
 void ConnectionManager::disconnectFromHost()
 {
     setStatus(NotConnected);
-    m_networkClient->disconnectFromHost();
+    m_socket->disconnectFromHost();
+    m_index = -1;
+    m_players.clear();
+}
+
+void ConnectionManager::sendChat(const QString &chat)
+{
+    sendMessageString(m_socket, ChatType, chat);
 }
 
 void ConnectionManager::setStatus(Status status)
@@ -86,17 +94,35 @@ void ConnectionManager::setStatus(Status status)
     }
 }
 
-void ConnectionManager::reply(NetworkClient::MessageType type, const QByteArray &data)
+void ConnectionManager::reply(MessageType type, const QByteArray &data)
 {
     switch (type) {
-    case NetworkClient::NameType: {
-            QString name = QString::fromUtf8(data);
-            if (name != m_playerName) {
-                qWarning() << "Nickname receivend from server do not match";
-                qWarning() << "You might have changed nickname before being registered";
-                setPlayerName(name);
+    case PlayerType: {
+            QDataStream stream (data);
+            int index;
+            QList<PlayerProperties> players;
+            stream >> index >> players;
+            if (m_status == Registering) {
+                QString playerName = players.value(index).name();
+                if (m_playerName != playerName) {
+                    qWarning() << "Nickname receivend from server do not match";
+                    qWarning() << "You might have changed nickname before being registered";
+                    setPlayerName(playerName);
+                }
+
+                setStatus(Connected);
             }
-            setStatus(Connected);
+
+            qDebug() << "Player list count" << players.count();
+            qDebug() << "Your index" << index;
+        }
+        break;
+    case ChatType: {
+            QDataStream stream (data);
+            QString name;
+            QString chat;
+            stream >> name >> chat;
+            emit chatReceived(name, chat);
         }
         break;
     }
@@ -106,12 +132,12 @@ void ConnectionManager::slotConnected()
 {
     qDebug() << "Connected, sending nickname";
     setStatus(Registering);
-    m_networkClient->sendMessageString(NetworkClient::NameType, m_playerName);
+    sendMessageString(m_socket, PlayerType, m_playerName);
 }
 
 void ConnectionManager::slotError(QAbstractSocket::SocketError error)
 {
-    qDebug() << "Connection error" << error << m_networkClient->errorString();
+    qDebug() << "Connection error" << error << m_socket->errorString();
     setStatus(NotConnected);
 }
 
@@ -121,12 +147,12 @@ void ConnectionManager::slotReadyRead()
 
     if (m_nextMessageSize == -1) {
         // We read the size of the message
-        if ((uint) m_networkClient->bytesAvailable() < sizeof(quint16)) {
+        if ((uint) m_socket->bytesAvailable() < sizeof(quint16)) {
             return;
         }
 
         quint16 size;
-        QDataStream in(m_networkClient);
+        QDataStream in(m_socket);
         in >> size;
         m_nextMessageSize = (int) size;
 
@@ -134,17 +160,17 @@ void ConnectionManager::slotReadyRead()
     }
 
     // We read the content of the socket
-    if (m_networkClient->bytesAvailable() < m_nextMessageSize) {
+    if (m_socket->bytesAvailable() < m_nextMessageSize) {
         return;
     }
 
-    QDataStream in (m_networkClient);
+    QDataStream in (m_socket);
     quint16 typeInt;
     QByteArray data;
     in >> typeInt;
     in >> data;
-    NetworkClient::MessageType type = (NetworkClient::MessageType) typeInt;
-    qDebug() << "Received data" << type << data;
+    MessageType type = (MessageType) typeInt;
+    qDebug() << "Received data" << type << "of size" << data.size();
     m_nextMessageSize = -1;
 
     reply(type, data);
