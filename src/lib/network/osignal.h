@@ -32,7 +32,22 @@
 #ifndef OSIGNAL_H
 #define OSIGNAL_H
 
-#define OSIGNAL(CLASS, NAME, ARGS) \
-    static_cast<void (CLASS::*)(ARGS)>(&CLASS::NAME) 
+/**
+ * @file osignal.h
+ * @short Useful macros for Qt connection system
+ */
+
+/**
+ * @short Helper macro for Qt connection system
+ *
+ * This macro generates casts an overloaded method
+ * to a give signature.
+ *
+ * @param CLASS class name.
+ * @param NAME method name.
+ * @param ARG first argument type.
+ */
+#define OSIGNAL(CLASS, NAME, ARG) \
+    static_cast<void (CLASS::*)(ARG)>(&CLASS::NAME)
 
 #endif // OSIGNAL_H

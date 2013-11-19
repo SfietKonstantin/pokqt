@@ -29,33 +29,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#include "connectionmanager.h"
+#include "networkclient.h"
 #include "osignal.h"
 #include <QtCore/QDataStream>
 #include <QtNetwork/QHostAddress>
 
-ConnectionManager::ConnectionManager(QObject *parent) :
+NetworkClient::NetworkClient(QObject *parent) :
     QObject(parent), m_status(NotConnected), m_nextMessageSize(-1)
 {
     m_index = -1;
     m_socket = new QTcpSocket(this);
-    connect(m_socket, &QTcpSocket::connected, this, &ConnectionManager::slotConnected);
+    connect(m_socket, &QTcpSocket::connected, this, &NetworkClient::slotConnected);
     connect(m_socket, OSIGNAL(QTcpSocket, error, QAbstractSocket::SocketError),
-            this, &ConnectionManager::slotError);
-    connect(m_socket, &QTcpSocket::readyRead, this, &ConnectionManager::slotReadyRead);
+            this, &NetworkClient::slotError);
+    connect(m_socket, &QTcpSocket::readyRead, this, &NetworkClient::slotReadyRead);
 }
 
-ConnectionManager::Status ConnectionManager::status() const
+NetworkClient::Status NetworkClient::status() const
 {
     return m_status;
 }
 
-QString ConnectionManager::playerName() const
+QString NetworkClient::playerName() const
 {
     return m_playerName;
 }
 
-void ConnectionManager::setPlayerName(const QString &playerName)
+void NetworkClient::setPlayerName(const QString &playerName)
 {
     if (m_playerName != playerName) {
         m_playerName = playerName;
@@ -67,26 +67,37 @@ void ConnectionManager::setPlayerName(const QString &playerName)
     }
 }
 
-void ConnectionManager::connectToHost(const QString &host, int port)
+QList<PlayerProperties> NetworkClient::players() const
+{
+    return m_players;
+}
+
+int NetworkClient::index() const
+{
+    return m_index;
+}
+
+void NetworkClient::connectToHost(const QString &host, int port)
 {
     setStatus(Connecting);
     m_socket->connectToHost(QHostAddress(host), port);
 }
 
-void ConnectionManager::disconnectFromHost()
+void NetworkClient::disconnectFromHost()
 {
     setStatus(NotConnected);
     m_socket->disconnectFromHost();
+    setPlayers(QList<PlayerProperties>(), -1);
     m_index = -1;
     m_players.clear();
 }
 
-void ConnectionManager::sendChat(const QString &chat)
+void NetworkClient::sendChat(const QString &chat)
 {
     sendMessageString(m_socket, ChatType, chat);
 }
 
-void ConnectionManager::setStatus(Status status)
+void NetworkClient::setStatus(Status status)
 {
     if (m_status != status) {
         m_status = status;
@@ -94,7 +105,17 @@ void ConnectionManager::setStatus(Status status)
     }
 }
 
-void ConnectionManager::reply(MessageType type, const QByteArray &data)
+void NetworkClient::setPlayers(const QList<PlayerProperties> &players, int index)
+{
+    if (m_index != index || m_players != players) {
+        m_players = players;
+        m_index = index;
+
+        emit playersChanged();
+    }
+}
+
+void NetworkClient::reply(MessageType type, const QByteArray &data)
 {
     switch (type) {
     case PlayerType: {
@@ -115,6 +136,8 @@ void ConnectionManager::reply(MessageType type, const QByteArray &data)
 
             qDebug() << "Player list count" << players.count();
             qDebug() << "Your index" << index;
+
+            setPlayers(players, index);
         }
         break;
     case ChatType: {
@@ -128,20 +151,20 @@ void ConnectionManager::reply(MessageType type, const QByteArray &data)
     }
 }
 
-void ConnectionManager::slotConnected()
+void NetworkClient::slotConnected()
 {
     qDebug() << "Connected, sending nickname";
     setStatus(Registering);
     sendMessageString(m_socket, PlayerType, m_playerName);
 }
 
-void ConnectionManager::slotError(QAbstractSocket::SocketError error)
+void NetworkClient::slotError(QAbstractSocket::SocketError error)
 {
     qDebug() << "Connection error" << error << m_socket->errorString();
     setStatus(NotConnected);
 }
 
-void ConnectionManager::slotReadyRead()
+void NetworkClient::slotReadyRead()
 {
     qDebug() << "Received data";
 

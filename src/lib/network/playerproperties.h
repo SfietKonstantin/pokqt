@@ -32,23 +32,90 @@
 #ifndef PLAYERPROPERTIES_H
 #define PLAYERPROPERTIES_H
 
+/**
+ * @file playerproperties.h
+ * @short Definition of PlayerProperties
+ */
 #include <QtCore/QString>
 
+/**
+ * @brief Player properties
+ *
+ * This class stores properties of a give player.
+ * For a poker game, you usually needs to store the
+ * nickname, and number of tokens you still have.
+ *
+ * This class is both used in server side and client
+ * side to store the current state of the game.
+ *
+ * Cards in hand are not stored in this class, since
+ * they are stored server-side only (to make sure that
+ * there is no way to cheat).
+ */
 class PlayerProperties
 {
 public:
-
+    /**
+     * @brief Default constructor
+     */
     explicit PlayerProperties();
+    PlayerProperties & operator=(const PlayerProperties &other);
+    /**
+     * @brief Get player's name
+     * @return player's name.
+     */
     QString name() const;
+    /**
+     * @brief Set player's name
+     * @param name player's name to set.
+     */
     void setName(const QString &name);
-    int tokens() const;
-    void setTokens(int tokens);
+    /**
+     * @brief Get player's token count
+     * @return player's token count.
+     */
+    int tokenCount() const;
+    /**
+     * @brief Set player's token count
+     * @param tokens player's token count to set.
+     */
+    void setTokenCount(int tokenCount);
+    /**
+     * @brief Equality
+     *
+     * Implementation of the equality operator. Two player properties
+     * are equal if they have the same name and token count.
+     *
+     * @param other other object.
+     * @return if this instance and the other object are equal.
+     */
+    bool operator==(const PlayerProperties &other);
 private:
+    /**
+     * @internal
+     * @brief Player's name
+     */
     QString m_name;
-    int m_tokens;
+    /**
+     * @internal
+     * @brief Player's token count
+     */
+    int m_tokenCount;
 };
 
+/**
+ * @brief Serialize a PlayerProperties in a QDataStream
+ * @param stream stream used to serialize.
+ * @param playerProperties object to serialize.
+ * @return a reference to the stream with the serialized object.
+ */
 QDataStream &operator <<(QDataStream &stream, const PlayerProperties &playerProperties);
+/**
+ * @brief Deserialize a PlayerProperties from a QDataStream
+ * @param stream stream used to deserialize.
+ * @param playerProperties reference to the object that is used to store deserialized data.
+ * @return a reference to the stream without the serialized object.
+ */
 QDataStream &operator >>(QDataStream &stream, PlayerProperties &playerProperties);
 
 #endif // PLAYERPROPERTIES_H

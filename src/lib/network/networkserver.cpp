@@ -68,7 +68,7 @@ void NetworkServer::reply(QTcpSocket *socket, MessageType type, const QByteArray
     case PlayerType:
         // Set the name
         m_playerProperties[socket].setName(QString::fromUtf8(data));
-        m_playerProperties[socket].setTokens(1000); // TODO: variable number of tokens
+        m_playerProperties[socket].setTokenCount(1000); // TODO: variable number of tokens
         replyPlayers();
         break;
     case ChatType:

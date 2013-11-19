@@ -41,24 +41,61 @@ Item {
         source: "assets/background.jpg"
     }
 
-    ConnectionManager {
-        id: connectionManager
+    NetworkClient {
+        id: client
         onChatReceived: chatPanel.appendChatMessage(playerName, chat)
     }
 
     ChatPanel {
         id: chatPanel
-        visible: connectionManager.status == ConnectionManager.Connected
+        visible: client.status == NetworkClient.Connected
         anchors.top: parent.top; anchors.bottom: parent.bottom
         anchors.right: parent.right
     }
 
     ConnectDialog {
-        visible: connectionManager.status == ConnectionManager.NotConnected
+        visible: client.status == NetworkClient.NotConnected
         anchors.centerIn: parent
         onConnectToHost: {
-            connectionManager.playerName = nickname
-            connectionManager.connectToHost(ip, port)
+            client.playerName = nickname
+            client.connectToHost(ip, port)
+        }
+    }
+
+    Item {
+        id: gamingBoard
+        anchors.left: parent.left; anchors.right: chatPanel.left
+        anchors.top: parent.top;anchors.bottom: parent.bottom
+        visible: client.status == NetworkClient.Connected
+
+        PathView {
+            id: pathView
+            interactive: false
+            anchors.fill: parent
+            preferredHighlightBegin: 1 / (2 * count)
+            preferredHighlightEnd: 1 / (2 * count)
+
+            path: Path {
+                startX: 0; startY: pathView.height / 2
+                PathQuad {
+                    x: pathView.width
+                    y: pathView.height / 2
+                    controlX: pathView.width / 2
+                    controlY: pathView.height / 4
+                }
+            }
+
+            model: PlayersModel {
+                client: client
+            }
+
+            delegate:Rectangle {
+                width: 50; height: 50
+                Text {
+                    anchors.centerIn: parent
+                    text:model.name
+                }
+            }
         }
     }
 }

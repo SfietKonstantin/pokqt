@@ -29,8 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef CONNECTIONMANAGER_H
-#define CONNECTIONMANAGER_H
+#ifndef NETWORKCLIENT_H
+#define NETWORKCLIENT_H
 
 #include "pokqtnetwork_global.h"
 #include "helpers.h"
@@ -39,7 +39,7 @@
 #include <QtCore/QStringList>
 #include <QtNetwork/QTcpSocket>
 
-class POKQTNETWORKSHARED_EXPORT ConnectionManager : public QObject
+class POKQTNETWORKSHARED_EXPORT NetworkClient : public QObject
 {
     Q_OBJECT
     Q_ENUMS(Status)
@@ -52,19 +52,25 @@ public:
         Registering,
         Connected
     };
-    explicit ConnectionManager(QObject *parent = 0);
+    explicit NetworkClient(QObject *parent = 0);
     Status status() const;
     QString playerName() const;
     void setPlayerName(const QString &playerName);
+
+    // Non-QML API
+    QList<PlayerProperties> players() const;
+    int index() const;
 signals:
+    void playersChanged();
     void statusChanged();
-    void playerNameChanged();
+    void playerNameChanged(); // TODO: change this, use name instead of playerName
     void chatReceived(const QString &playerName, const QString &chat);
 public slots:
     void connectToHost(const QString &host, int port);
     void disconnectFromHost();
     void sendChat(const QString &chat);
 private:
+    void setPlayers(const QList<PlayerProperties> &players, int index);
     void setStatus(Status status);
     void reply(MessageType type, const QByteArray &data);
     Status m_status;
@@ -79,4 +85,4 @@ private slots:
     void slotReadyRead();
 };
 
-#endif // CONNECTIONMANAGER_H
+#endif // NETWORKCLIENT_H

@@ -29,12 +29,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file playerproperties.cpp
+ * @short Implementation of PlayerProperties
+ */
+
 #include "playerproperties.h"
 #include <QtCore/QDataStream>
 
 PlayerProperties::PlayerProperties()
-    : m_tokens(0)
+    : m_tokenCount(0)
 {
+}
+
+PlayerProperties & PlayerProperties::operator=(const PlayerProperties &other)
+{
+    m_name = other.name();
+    m_tokenCount = other.tokenCount();
+    return *this;
 }
 
 QString PlayerProperties::name() const
@@ -47,19 +59,24 @@ void PlayerProperties::setName(const QString &name)
     m_name = name;
 }
 
-int PlayerProperties::tokens() const
+int PlayerProperties::tokenCount() const
 {
-    return m_tokens;
+    return m_tokenCount;
 }
 
-void PlayerProperties::setTokens(int tokens)
+void PlayerProperties::setTokenCount(int tokenCount)
 {
-    m_tokens = tokens;
+    m_tokenCount = tokenCount;
+}
+
+bool PlayerProperties::operator==(const PlayerProperties &other)
+{
+    return (m_tokenCount == other.tokenCount() && m_name == other.name());
 }
 
 QDataStream &operator<<(QDataStream &stream, const PlayerProperties &playerProperties)
 {
-    stream << playerProperties.name() << (qint32) playerProperties.tokens();
+    stream << playerProperties.name() << (qint32) playerProperties.tokenCount();
     return stream;
 }
 
@@ -69,6 +86,6 @@ QDataStream &operator >>(QDataStream &stream, PlayerProperties &playerProperties
     qint32 tokens;
     stream >> name >> tokens;
     playerProperties.setName(name);
-    playerProperties.setTokens((int) tokens);
+    playerProperties.setTokenCount((int) tokens);
     return stream;
 }

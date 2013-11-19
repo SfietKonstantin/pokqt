@@ -32,8 +32,17 @@
 #ifndef POKQTNETWORK_GLOBAL_H
 #define POKQTNETWORK_GLOBAL_H
 
+/**
+ * @file pokqtnetwork_global.h
+ * @short pokQt network library global defines
+ */
+
 #include <QtCore/qglobal.h>
 
+/**
+ * @def POKQTNETWORKSHARED_EXPORT
+ * @short pokQt network library export
+ */
 #if defined(POKQTNETWORK_LIBRARY)
 #  define POKQTNETWORKSHARED_EXPORT Q_DECL_EXPORT
 #else

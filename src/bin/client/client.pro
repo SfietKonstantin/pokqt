@@ -6,7 +6,8 @@ INCLUDEPATH+=../../lib/network
 LIBS+=-L../../lib/network -lpokqtnetwork
 
 SOURCES += \
-    main.cpp
+    main.cpp \
+    playersmodel.cpp
 
 OTHER_FILES += \
     main.qml \
@@ -15,3 +16,6 @@ OTHER_FILES += \
 
 RESOURCES += \
     res.qrc
+
+HEADERS += \
+    playersmodel.h

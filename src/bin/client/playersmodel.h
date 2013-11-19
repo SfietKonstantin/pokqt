@@ -29,36 +29,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-import QtQuick 2.1
-import QtQuick.Controls 1.0
-import com.ecp.isia.pokqt 1.0
+#ifndef PLAYERSMODEL_H
+#define PLAYERSMODEL_H
 
-Item {
-    width: 300
-    height: 500
+#include <QtCore/QAbstractListModel>
+#include <playerproperties.h>
+#include <networkclient.h>
 
-    ConnectionManager {
-        id: connectionManager
-        playerName: "SK"
-    }
+class PlayersModel : public QAbstractListModel
+{
+    Q_OBJECT
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(NetworkClient *client READ client WRITE setClient NOTIFY clientChanged)
+public:
+    enum PlayersModelRole {
+        NameRole,
+        TokenCountRole
+    };
+    explicit PlayersModel(QObject *parent = 0);
+    QHash<int, QByteArray> roleNames() const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int count() const;
+    NetworkClient * client() const;
+    void setClient(NetworkClient *client);
+    QVariant data(const QModelIndex &index, int role) const;
+signals:
+    void countChanged();
+    void clientChanged();
+private:
+    QList<PlayerProperties> m_data;
+    NetworkClient *m_client;
+    void slotPlayersChanged();
+};
 
-    Column {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-
-        Button {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "Connect"
-            enabled: connectionManager.status == ConnectionManager.NotConnected
-            onClicked: connectionManager.connectToHost("127.0.0.1", 8008)
-        }
-
-        Button {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "Disconnect"
-            enabled: connectionManager.status == ConnectionManager.Connected
-            onClicked: connectionManager.disconnectFromHost()
-        }
-    }
-}
+#endif // PLAYERSMODEL_H

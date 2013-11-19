@@ -33,7 +33,8 @@
 #include <QtQml/qqml.h>
 #include <QtQml/QQmlEngine>
 #include <QtQuick/QQuickView>
-#include <connectionmanager.h>
+#include <networkclient.h>
+#include "playersmodel.h"
 
 // "Functor" to be used in Qt compile-time check "connect"
 // Connecting to QCoreApplication::quit fails, because it is
@@ -50,7 +51,8 @@ int main(int argc, char **argv)
     QQuickView view;
     QObject::connect(view.engine(), &QQmlEngine::quit, quit);
 
-    qmlRegisterType<ConnectionManager>("com.ecp.isia.pokqt", 1, 0, "ConnectionManager");
+    qmlRegisterType<NetworkClient>("com.ecp.isia.pokqt", 1, 0, "NetworkClient");
+    qmlRegisterType<PlayersModel>("com.ecp.isia.pokqt", 1, 0, "PlayersModel");
 
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:/main.qml"));

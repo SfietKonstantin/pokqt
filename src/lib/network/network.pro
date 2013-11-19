@@ -7,12 +7,12 @@ DEFINES += POKQTNETWORK_LIBRARY
 
 HEADERS += pokqtnetwork_global.h \
     osignal.h \
-    networkserver.h \
     playerproperties.h \
-    connectionmanager.h \
+    networkserver.h \
+    networkclient.h \
     helpers.h
 
 SOURCES += \
-    networkserver.cpp \
     playerproperties.cpp \
-    connectionmanager.cpp
+    networkserver.cpp \
+    networkclient.cpp

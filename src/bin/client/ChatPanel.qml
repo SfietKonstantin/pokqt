@@ -36,7 +36,7 @@ Item {
     width: 200
     function appendChatMessage(name, message) {
         chat.text.trim()
-        chat.text += "<strong>" + name + "</strong>: " + message + "<br/>"
+        chat.text += "<strong>" + name + ":</strong> " + message + "<br/>"
     }
 
     TextArea {
@@ -64,7 +64,7 @@ Item {
                 return
             }
 
-            connectionManager.sendChat(field.text)
+            client.sendChat(field.text)
             field.text = ""
         }
     }
