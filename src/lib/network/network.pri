@@ -1,7 +1,7 @@
-HEADERS += $$PWD/osignal.h \
+HEADERS += $$PWD/helpers.h \
     $$PWD/networkserver.h \
     $$PWD/networkclient.h \
-    $$PWD/helpers.h
+
 
 SOURCES += $$PWD/networkserver.cpp \
     $$PWD/networkclient.cpp

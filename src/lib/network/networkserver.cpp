@@ -40,7 +40,6 @@
 
 static const char *NET_TYPE = "net";
 static const char *CHAT_TYPE = "chat";
-static const char *GAME_TYPE = "game";
 
 NetworkServer::NetworkServer(QObject *parent)
     : QObject(parent)
@@ -66,23 +65,13 @@ void NetworkServer::stopServer()
     m_server->close();
 }
 
-void NetworkServer::startGame()
-{
-    // Broadcast start game to everybody
-    foreach (QTcpSocket *socket, m_sockets) {
-        sendMessage(socket, StartGameType);
-    }
-
-    distributeCards();
-}
-
-void NetworkServer::broadCastPlayers(const QList<PlayerProperties> &players)
+void NetworkServer::broadCastPlayers(const QList<PlayerProperties> &players, int pot)
 {
     // Send the data to each socket
     for (int i = 0; i < m_sockets.count(); ++i) {
         QByteArray data;
         QDataStream stream (&data, QIODevice::WriteOnly);
-        stream << i << players;
+        stream << i << players << pot;
         sendMessage(m_sockets[i], PlayerType, data);
     }
 }
@@ -100,33 +89,30 @@ void NetworkServer::refusePlayer(QObject *handle)
 
 void NetworkServer::chat(const QString &name, const QString &message)
 {
-    QByteArray newData;
-    QDataStream stream (&newData, QIODevice::WriteOnly);
+    QByteArray data;
+    QDataStream stream (&data, QIODevice::WriteOnly);
     stream << name << message;
 
     displayMessage(CHAT_TYPE, QString("%1: %2").arg(name, message));
 
     foreach (QTcpSocket *socket, m_sockets) {
-        sendMessage(socket, ChatType, newData);
+        sendMessage(socket, ChatType, data);
     }
 }
 
-void NetworkServer::distributeCards()
+void NetworkServer::distributeCards(QObject *handle, const QList<Card> &cards)
 {
-//    if (2 * m_sockets.count() + 5 > m_deck.count()) {
-//        m_deck.reset();
-//        m_deck.shuffle();
-//        emit displayMessage(GAME_TYPE, "Deck reshuffled");
-//    }
+    // Handles are sockets
+    QTcpSocket *socket = qobject_cast<QTcpSocket *>(handle);
+    if (!socket) {
+        return;
+    }
 
-//    // Distribute 2 cards to everybody
-//    foreach (QTcpSocket *socket, m_sockets) {
-//        QByteArray data;
-//        QDataStream stream (&data, QIODevice::WriteOnly);
+    QByteArray data;
+    QDataStream stream (&data, QIODevice::WriteOnly);
+    stream << cards;
 
-//        stream << m_deck.draw() << m_deck.draw();
-//        sendMessage(socket, CardsType, data);
-//    }
+    sendMessage(socket, CardsType, data);
 }
 
 void NetworkServer::reply(QTcpSocket *socket, MessageType type, const QByteArray &data)
@@ -137,8 +123,6 @@ void NetworkServer::reply(QTcpSocket *socket, MessageType type, const QByteArray
         break;
     case ChatType:
         emit chatReceived(socket, QString::fromUtf8(data));
-        break;
-    case StartGameType: // Do nothing
         break;
     case CardsType: // Do nothing
         break;

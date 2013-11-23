@@ -4,5 +4,10 @@
         <file>assets/background.jpg</file>
         <file>ConnectDialog.qml</file>
         <file>ChatPanel.qml</file>
+        <file>GamingBoard.qml</file>
+        <file>PlayerData.qml</file>
+        <file>UiConstants.js</file>
+        <file>assets/bank.png</file>
+        <file>assets/bet.png</file>
     </qresource>
 </RCC>

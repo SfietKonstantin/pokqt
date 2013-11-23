@@ -36,6 +36,7 @@
 #include "helpers.h"
 #include <QtNetwork/QHostAddress>
 #include "logic/playerproperties.h"
+#include "logic/card.h"
 
 class QTcpSocket;
 class QTcpServer;
@@ -58,13 +59,12 @@ signals:
 public slots:
     void startServer(int port);
     void stopServer();
-    void startGame();
 
-    void broadCastPlayers(const QList<PlayerProperties> &players);
+    void broadCastPlayers(const QList<PlayerProperties> &players, int pot);
     void refusePlayer(QObject *handle);
     void chat(const QString &name, const QString &message);
+    void distributeCards(QObject *handle, const QList<Card> &cards);
 private:
-    void distributeCards();
     void reply(QTcpSocket *socket, MessageType type, const QByteArray &data);
     QHostAddress m_address;
     int m_port;

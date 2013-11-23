@@ -38,7 +38,7 @@
 #include <QtCore/QDataStream>
 
 PlayerProperties::PlayerProperties()
-    : m_tokenCount(0)
+    : m_tokenCount(0), m_betCount(0)
 {
 }
 
@@ -46,6 +46,7 @@ PlayerProperties & PlayerProperties::operator=(const PlayerProperties &other)
 {
     m_name = other.name();
     m_tokenCount = other.tokenCount();
+    m_betCount = other.betCount();
     return *this;
 }
 
@@ -69,23 +70,38 @@ void PlayerProperties::setTokenCount(int tokenCount)
     m_tokenCount = tokenCount;
 }
 
+int PlayerProperties::betCount() const
+{
+    return m_betCount;
+}
+
+void PlayerProperties::setBetCount(int betCount)
+{
+    m_betCount = betCount;
+}
+
 bool PlayerProperties::operator==(const PlayerProperties &other)
 {
-    return (m_tokenCount == other.tokenCount() && m_name == other.name());
+    return (m_tokenCount == other.tokenCount()
+            && m_betCount == other.betCount()
+            && m_name == other.name());
 }
 
 QDataStream &operator<<(QDataStream &stream, const PlayerProperties &playerProperties)
 {
-    stream << playerProperties.name() << (qint32) playerProperties.tokenCount();
+    stream << playerProperties.name() << (qint32) playerProperties.tokenCount()
+           << (qint32) playerProperties.betCount();
     return stream;
 }
 
 QDataStream &operator >>(QDataStream &stream, PlayerProperties &playerProperties)
 {
     QString name;
-    qint32 tokens;
-    stream >> name >> tokens;
+    qint32 tokenCount;
+    qint32 betCount;
+    stream >> name >> tokenCount >> betCount;
     playerProperties.setName(name);
-    playerProperties.setTokenCount((int) tokens);
+    playerProperties.setTokenCount((int) tokenCount);
+    playerProperties.setBetCount((int) betCount);
     return stream;
 }

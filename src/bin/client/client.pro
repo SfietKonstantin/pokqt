@@ -12,7 +12,10 @@ SOURCES += \
 OTHER_FILES += \
     main.qml \
     ConnectDialog.qml \
-    ChatPanel.qml
+    ChatPanel.qml \
+    PlayerData.qml \
+    UiConstants.js \
+    GamingBoard.qml
 
 RESOURCES += \
     res.qrc

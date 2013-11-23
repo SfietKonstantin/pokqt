@@ -31,9 +31,10 @@
 
 import QtQuick 2.0
 import QtQuick.Controls 1.0
+import "UiConstants.js" as Ui
 
 Item {
-    width: 200
+    width: Ui.PANEL_WIDTH
     function appendChatMessage(name, message) {
         chat.text.trim()
         chat.text += "<strong>" + name + ":</strong> " + message + "<br/>"
@@ -64,7 +65,7 @@ Item {
                 return
             }
 
-            client.sendChat(field.text)
+            networkClient.sendChat(field.text)
             field.text = ""
         }
     }

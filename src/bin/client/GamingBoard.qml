@@ -29,51 +29,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef GAMEMANAGER_H
-#define GAMEMANAGER_H
+import QtQuick 2.0
+import com.ecp.isia.pokqt 1.0
 
-#include <QtCore/QObject>
-#include <QtCore/QMap>
-#include "playerproperties.h"
-#include "deck.h"
+Item {
+    id: gamingBoard
 
-class GameManager : public QObject
-{
-    Q_OBJECT
-public:
-    enum GameStatus {
-        Invalid,
-        WaitingPlayers,
-        PreparingGame,
+    PathView {
+        id: pathView
+        anchors.fill: parent
+        interactive: false
+        preferredHighlightBegin: 1 / (2 * count)
+        preferredHighlightEnd: 1 / (2 * count)
 
-    };
+        path: Path {
+            startX: 0; startY: pathView.height / 2
+            PathQuad {
+                x: pathView.width
+                y: pathView.height / 2
+                controlX: pathView.width / 2
+                controlY: pathView.height / 4
+            }
+        }
 
-    explicit GameManager(QObject *parent = 0);
+        model: PlayersModel {
+            id: playersModel
+            client: networkClient
+        }
 
-public slots:
-    void start();
-    void startGame();
-    void stop();
-    void addPlayer(QObject *handle, const QString &name);
-    void removePlayer(QObject *handle);
-    void chat(QObject *handle, const QString &message);
-signals:
-    void playersBroadcasted(const QList<PlayerProperties> &players, int pot);
-    void playerRefused(QObject *handle);
-    void chatSent(const QString &name, const QString &message);
-    void cardsDistributed(QObject *handle, const QList<Card> &card);
-private:
-    int index(int i);
-    void performBroadcastPlayers();
-    void prepareRound();
-    GameStatus m_status;
-    int m_initialPlayer;
-    int m_currentPlayer;
-    QList<QObject *> m_handles;
-    QMap<QObject *, PlayerProperties> m_playerProperties;
-    QMap<QObject *, bool> m_playerReady;
-    Deck m_deck;
-    int m_pot;
-};
+        delegate: PlayerData {
+            name: model.name
+            tokenCount: model.tokenCount
+            betCount: model.betCount
+        }
+    }
 
-#endif // GAMEMANAGER_H
+    PlayerData {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        name: playersModel.name
+        tokenCount: playersModel.tokenCount
+        betCount: playersModel.betCount
+    }
+}

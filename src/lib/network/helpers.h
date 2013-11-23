@@ -41,7 +41,6 @@
 enum MessageType {
     PlayerType,
     ChatType,
-    StartGameType,
     CardsType
 };
 

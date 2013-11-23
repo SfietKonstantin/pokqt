@@ -41,10 +41,15 @@ class PlayersModel : public QAbstractListModel
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(NetworkClient *client READ client WRITE setClient NOTIFY clientChanged)
+    Q_PROPERTY(int pot READ pot NOTIFY potChanged)
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
+    Q_PROPERTY(int tokenCount READ tokenCount NOTIFY tokenCountChanged)
+    Q_PROPERTY(int betCount READ betCount NOTIFY betCountChanged)
 public:
     enum PlayersModelRole {
         NameRole,
-        TokenCountRole
+        TokenCountRole,
+        BetCountRole
     };
     explicit PlayersModel(QObject *parent = 0);
     QHash<int, QByteArray> roleNames() const;
@@ -52,13 +57,23 @@ public:
     int count() const;
     NetworkClient * client() const;
     void setClient(NetworkClient *client);
+    int pot() const;
+    QString name() const;
+    int tokenCount() const;
+    int betCount() const;
     QVariant data(const QModelIndex &index, int role) const;
 signals:
     void countChanged();
     void clientChanged();
+    void potChanged();
+    void nameChanged();
+    void tokenCountChanged();
+    void betCountChanged();
 private:
+    int m_pot;
     QList<PlayerProperties> m_data;
     NetworkClient *m_client;
+    PlayerProperties m_player;
     void slotPlayersChanged();
 };
 

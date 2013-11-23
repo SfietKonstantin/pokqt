@@ -29,25 +29,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef OSIGNAL_H
-#define OSIGNAL_H
+#ifndef HAND_H
+#define HAND_H
 
-/**
- * @file osignal.h
- * @short Useful macros for Qt connection system
- */
+#include <QtCore/QList>
+#include "card.h"
 
-/**
- * @short Helper macro for Qt connection system
- *
- * This macro generates casts an overloaded method
- * to a give signature.
- *
- * @param CLASS class name.
- * @param NAME method name.
- * @param ARG first argument type.
- */
-#define OSIGNAL(CLASS, NAME, ARG) \
-    static_cast<void (CLASS::*)(ARG)>(&CLASS::NAME)
+class Hand
+{
+public:
+    explicit Hand();
+    Hand(const Hand &other);
+    Hand & operator=(const Hand &other);
+    bool operator==(const Hand &other);
+    bool operator<(const Hand &other);
+    QList<Card> cards() const;
+    void clear();
+private:
+    QList<Card> m_cards;
+};
 
-#endif // OSIGNAL_H
+#endif // HAND_H

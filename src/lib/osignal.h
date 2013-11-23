@@ -29,51 +29,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef GAMEMANAGER_H
-#define GAMEMANAGER_H
+#ifndef OSIGNAL_H
+#define OSIGNAL_H
 
-#include <QtCore/QObject>
-#include <QtCore/QMap>
-#include "playerproperties.h"
-#include "deck.h"
+/**
+ * @file osignal.h
+ * @short Useful macros for Qt connection system
+ */
 
-class GameManager : public QObject
-{
-    Q_OBJECT
-public:
-    enum GameStatus {
-        Invalid,
-        WaitingPlayers,
-        PreparingGame,
+/**
+ * @short Helper macro for Qt connection system
+ *
+ * This macro generates casts an overloaded method
+ * to a give signature.
+ *
+ * @param CLASS class name.
+ * @param NAME method name.
+ * @param ARG first argument type.
+ */
+#define OSIGNAL(CLASS, NAME, ARG) \
+    static_cast<void (CLASS::*)(ARG)>(&CLASS::NAME)
 
-    };
+#define OSIGNAL0(CLASS, NAME) \
+    static_cast<void (CLASS::*)()>(&CLASS::NAME)
 
-    explicit GameManager(QObject *parent = 0);
-
-public slots:
-    void start();
-    void startGame();
-    void stop();
-    void addPlayer(QObject *handle, const QString &name);
-    void removePlayer(QObject *handle);
-    void chat(QObject *handle, const QString &message);
-signals:
-    void playersBroadcasted(const QList<PlayerProperties> &players, int pot);
-    void playerRefused(QObject *handle);
-    void chatSent(const QString &name, const QString &message);
-    void cardsDistributed(QObject *handle, const QList<Card> &card);
-private:
-    int index(int i);
-    void performBroadcastPlayers();
-    void prepareRound();
-    GameStatus m_status;
-    int m_initialPlayer;
-    int m_currentPlayer;
-    QList<QObject *> m_handles;
-    QMap<QObject *, PlayerProperties> m_playerProperties;
-    QMap<QObject *, bool> m_playerReady;
-    Deck m_deck;
-    int m_pot;
-};
-
-#endif // GAMEMANAGER_H
+#endif // OSIGNAL_H

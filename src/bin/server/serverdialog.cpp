@@ -57,6 +57,7 @@ void ServerDialog::startClicked()
     ui->startPushButton->setEnabled(false);
     ui->startGamePushButton->setEnabled(true);
     ui->stopPushButton->setEnabled(true);
+    emit start();
     emit start(ui->portSpinBox->value());
 }
 

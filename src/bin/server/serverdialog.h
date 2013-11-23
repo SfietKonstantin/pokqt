@@ -46,6 +46,7 @@ public:
     explicit ServerDialog(QWidget *parent = 0);
     virtual ~ServerDialog();
 signals:
+    void start();
     void start(int port);
     void stop();
     void startGame();

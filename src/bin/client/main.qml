@@ -42,60 +42,29 @@ Item {
     }
 
     NetworkClient {
-        id: client
+        id: networkClient
         onChatReceived: chatPanel.appendChatMessage(playerName, chat)
     }
 
     ChatPanel {
         id: chatPanel
-        visible: client.status == NetworkClient.Connected
+        visible: networkClient.status == NetworkClient.Connected
         anchors.top: parent.top; anchors.bottom: parent.bottom
         anchors.right: parent.right
     }
 
     ConnectDialog {
-        visible: client.status == NetworkClient.NotConnected
+        visible: networkClient.status == NetworkClient.NotConnected
         anchors.centerIn: parent
         onConnectToHost: {
-            client.playerName = nickname
-            client.connectToHost(ip, port)
+            networkClient.playerName = nickname
+            networkClient.connectToHost(ip, port)
         }
     }
 
-    Item {
-        id: gamingBoard
+    GamingBoard {
         anchors.left: parent.left; anchors.right: chatPanel.left
         anchors.top: parent.top;anchors.bottom: parent.bottom
-        visible: client.status == NetworkClient.Connected
-
-        PathView {
-            id: pathView
-            interactive: false
-            anchors.fill: parent
-            preferredHighlightBegin: 1 / (2 * count)
-            preferredHighlightEnd: 1 / (2 * count)
-
-            path: Path {
-                startX: 0; startY: pathView.height / 2
-                PathQuad {
-                    x: pathView.width
-                    y: pathView.height / 2
-                    controlX: pathView.width / 2
-                    controlY: pathView.height / 4
-                }
-            }
-
-            model: PlayersModel {
-                client: client
-            }
-
-            delegate:Rectangle {
-                width: 50; height: 50
-                Text {
-                    anchors.centerIn: parent
-                    text:model.name
-                }
-            }
-        }
+        visible: networkClient.status == NetworkClient.Connected
     }
 }

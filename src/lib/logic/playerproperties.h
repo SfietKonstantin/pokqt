@@ -80,6 +80,8 @@ public:
      * @param tokens player's token count to set.
      */
     void setTokenCount(int tokenCount);
+    int betCount() const;
+    void setBetCount(int betCount);
     /**
      * @brief Equality
      *
@@ -101,6 +103,7 @@ private:
      * @brief Player's token count
      */
     int m_tokenCount;
+    int m_betCount;
 };
 
 /**

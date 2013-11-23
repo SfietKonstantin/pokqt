@@ -31,14 +31,42 @@
 
 #include "gamemanager.h"
 #include <QtCore/QDebug>
+#include <QtCore/QDateTime>
+
+static const int INITIAL_TOKEN_COUNT = 1000;
+static const int SMALL_BLEND = 10;
+static const int BIG_BLEND = 20;
+
 
 GameManager::GameManager(QObject *parent) :
-    QObject(parent)
+    QObject(parent), m_status(Invalid), m_initialPlayer(-1), m_currentPlayer(-1), m_pot(0)
 {
+}
+
+void GameManager::start()
+{
+    m_status = WaitingPlayers;
+}
+
+void GameManager::startGame()
+{
+    qsrand(QDateTime::currentMSecsSinceEpoch());
+    m_status = PreparingGame;
+    m_initialPlayer = qrand() % m_handles.count();
+    prepareRound();
+}
+
+void GameManager::stop()
+{
+    m_status = Invalid;
 }
 
 void GameManager::addPlayer(QObject *handle, const QString &name)
 {
+    if (m_status != WaitingPlayers) {
+        emit playerRefused(handle);
+    }
+
     if (m_playerProperties.contains(handle)) {
         qDebug() << Q_FUNC_INFO << "Player already registered for handle"
                  << handle << "and name" << name;
@@ -49,7 +77,7 @@ void GameManager::addPlayer(QObject *handle, const QString &name)
 
     PlayerProperties properties;
     properties.setName(name);
-    properties.setTokenCount(-1);
+    properties.setTokenCount(INITIAL_TOKEN_COUNT);
     m_playerProperties.insert(handle, properties);
 
     performBroadcastPlayers();
@@ -76,6 +104,11 @@ void GameManager::chat(QObject *handle, const QString &message)
     emit chatSent(m_playerProperties.value(handle).name(), message);
 }
 
+int GameManager::index(int i)
+{
+    return (i % m_handles.count());
+}
+
 void GameManager::performBroadcastPlayers()
 {
     QList<PlayerProperties> players;
@@ -83,5 +116,37 @@ void GameManager::performBroadcastPlayers()
         players.append(m_playerProperties.value(handle));
     }
 
-    emit playersBroadcasted(players);
+    emit playersBroadcasted(players, m_pot);
+}
+
+void GameManager::prepareRound()
+{
+    if (2 * m_handles.count() + 5 > m_deck.count()) {
+        m_deck.reset();
+        m_deck.shuffle();
+    }
+
+    // Distribute 2 cards to everybody
+    foreach (QObject *handle, m_handles) {
+        QList<Card> cards;
+        cards.append(m_deck.draw());
+        cards.append(m_deck.draw());
+        emit cardsDistributed(handle, cards);
+    }
+
+    m_initialPlayer = index(m_initialPlayer + 1);
+    m_currentPlayer = index(m_initialPlayer + 2);
+
+    // Take small and big blends
+    PlayerProperties &firstPlayer = m_playerProperties[m_handles[index(m_initialPlayer)]];
+    int smallBlend = qMin(SMALL_BLEND, firstPlayer.tokenCount());
+    firstPlayer.setTokenCount(firstPlayer.tokenCount() - smallBlend);
+
+    PlayerProperties &secondPlayer = m_playerProperties[m_handles[index(m_initialPlayer + 1)]];
+    int bigBlend = qMin(BIG_BLEND, secondPlayer.tokenCount());
+    secondPlayer.setTokenCount(secondPlayer.tokenCount() - bigBlend);
+
+
+    m_pot = smallBlend + bigBlend;
+    performBroadcastPlayers();
 }

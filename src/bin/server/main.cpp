@@ -34,6 +34,7 @@
 #include <logic/gamemanager.h>
 
 #include "serverdialog.h"
+#include <osignal.h>
 
 int main(int argc, char **argv)
 {
@@ -45,9 +46,14 @@ int main(int argc, char **argv)
 
     // Connections between dialog and server
     QObject::connect(&server, &NetworkServer::displayMessage, &dialog, &ServerDialog::displayMessage);
-    QObject::connect(&dialog, &ServerDialog::start, &server, &NetworkServer::startServer);
-    QObject::connect(&dialog, &ServerDialog::startGame, &server, &NetworkServer::startGame);
+    QObject::connect(&dialog, OSIGNAL(ServerDialog, start,int),
+                     &server, &NetworkServer::startServer);
     QObject::connect(&dialog, &ServerDialog::stop, &server, &NetworkServer::stopServer);
+
+    // Connections between dialog and game manager
+    QObject::connect(&dialog, OSIGNAL0(ServerDialog, start), &gameManager, &GameManager::start);
+    QObject::connect(&dialog, &ServerDialog::startGame, &gameManager, &GameManager::startGame);
+    QObject::connect(&dialog, &ServerDialog::stop, &gameManager, &GameManager::stop);
 
     // Connections between server and game manager
     QObject::connect(&server, &NetworkServer::playerAdded, &gameManager, &GameManager::addPlayer);
@@ -57,6 +63,8 @@ int main(int argc, char **argv)
                      &server, &NetworkServer::broadCastPlayers);
     QObject::connect(&server, &NetworkServer::chatReceived, &gameManager, &GameManager::chat);
     QObject::connect(&gameManager, &GameManager::chatSent, &server, &NetworkServer::chat);
+    QObject::connect(&gameManager, &GameManager::cardsDistributed,
+                     &server, &NetworkServer::distributeCards);
 
 
     dialog.show();

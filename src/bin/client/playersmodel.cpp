@@ -33,7 +33,7 @@
 #include <QtCore/QDebug>
 
 PlayersModel::PlayersModel(QObject *parent) :
-    QAbstractListModel(parent), m_client(0)
+    QAbstractListModel(parent), m_pot(0), m_client(0)
 {
 }
 
@@ -42,6 +42,7 @@ QHash<int, QByteArray> PlayersModel::roleNames() const
     QHash<int, QByteArray> roles;
     roles.insert(NameRole, "name");
     roles.insert(TokenCountRole, "tokenCount");
+    roles.insert(BetCountRole, "betCount");
     return roles;
 }
 
@@ -76,6 +77,26 @@ void PlayersModel::setClient(NetworkClient *client)
     }
 }
 
+int PlayersModel::pot() const
+{
+    return m_pot;
+}
+
+QString PlayersModel::name() const
+{
+    return m_player.name();
+}
+
+int PlayersModel::tokenCount() const
+{
+    return m_player.tokenCount();
+}
+
+int PlayersModel::betCount() const
+{
+    return m_player.betCount();
+}
+
 QVariant PlayersModel::data(const QModelIndex &index, int role) const
 {
     int row = index.row();
@@ -91,6 +112,9 @@ QVariant PlayersModel::data(const QModelIndex &index, int role) const
     case TokenCountRole:
         return playerProperties.tokenCount();
         break;
+    case BetCountRole:
+        return playerProperties.betCount();
+        break;
     default:
         return QVariant();
         break;
@@ -101,6 +125,23 @@ void PlayersModel::slotPlayersChanged()
 {
     int selfIndex = m_client->index();
     QList<PlayerProperties> players = m_client->players();
+    PlayerProperties oldPlayer = m_player;
+    m_player = players.value(selfIndex);
+    if (oldPlayer.name() != m_player.name()) {
+        emit nameChanged();
+    }
+    if (oldPlayer.tokenCount() != m_player.tokenCount()) {
+        emit tokenCountChanged();
+    }
+    if (oldPlayer.betCount() != m_player.betCount()) {
+        emit betCountChanged();
+    }
+
+    if (m_pot != m_client->pot()) {
+        m_pot = m_client->pot();
+        emit potChanged();
+    }
+
     int oldCount = rowCount();
     int newCount = players.count() - 1; // We remove "self" from the list
     if (oldCount > newCount) {

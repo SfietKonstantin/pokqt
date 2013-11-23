@@ -60,6 +60,7 @@ public:
     // Non-QML API
     QList<PlayerProperties> players() const;
     int index() const;
+    int pot() const;
 signals:
     void playersChanged();
     void statusChanged();
@@ -70,12 +71,13 @@ public slots:
     void disconnectFromHost();
     void sendChat(const QString &chat);
 private:
-    void setPlayers(const QList<PlayerProperties> &players, int index);
+    void setPlayers(const QList<PlayerProperties> &players, int index, int pot);
     void setStatus(Status status);
     void reply(MessageType type, const QByteArray &data);
     Status m_status;
     int m_index;
     QList<PlayerProperties> m_players;
+    int m_pot;
     QString m_playerName;
     QTcpSocket *m_socket;
     int m_nextMessageSize;

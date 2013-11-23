@@ -36,7 +36,7 @@
 #include "logic/card.h"
 
 NetworkClient::NetworkClient(QObject *parent) :
-    QObject(parent), m_status(NotConnected), m_nextMessageSize(-1)
+    QObject(parent), m_status(NotConnected), m_pot(0), m_nextMessageSize(-1)
 {
     m_index = -1;
     m_socket = new QTcpSocket(this);
@@ -78,6 +78,11 @@ int NetworkClient::index() const
     return m_index;
 }
 
+int NetworkClient::pot() const
+{
+    return m_pot;
+}
+
 void NetworkClient::connectToHost(const QString &host, int port)
 {
     setStatus(Connecting);
@@ -88,7 +93,7 @@ void NetworkClient::disconnectFromHost()
 {
     setStatus(NotConnected);
     m_socket->disconnectFromHost();
-    setPlayers(QList<PlayerProperties>(), -1);
+    setPlayers(QList<PlayerProperties>(), -1, 0);
     m_index = -1;
     m_players.clear();
 }
@@ -106,13 +111,14 @@ void NetworkClient::setStatus(Status status)
     }
 }
 
-void NetworkClient::setPlayers(const QList<PlayerProperties> &players, int index)
+void NetworkClient::setPlayers(const QList<PlayerProperties> &players, int index, int pot)
 {
-    if (m_index != index || m_players != players) {
+    if (m_index != index || m_pot != pot || m_players != players) {
         m_players = players;
         m_index = index;
+        m_pot = pot;
 
-        emit playersChanged();
+        emit playersChanged(); // TODO: rename to pot
     }
 }
 
@@ -123,7 +129,8 @@ void NetworkClient::reply(MessageType type, const QByteArray &data)
             QDataStream stream (data);
             int index;
             QList<PlayerProperties> players;
-            stream >> index >> players;
+            int pot;
+            stream >> index >> players >> pot;
             if (m_status == Registering) {
                 QString playerName = players.value(index).name();
                 if (m_playerName != playerName) {
@@ -137,8 +144,9 @@ void NetworkClient::reply(MessageType type, const QByteArray &data)
 
             qDebug() << "Player list count" << players.count();
             qDebug() << "Your index" << index;
+            qDebug() << "Current pot" << pot;
 
-            setPlayers(players, index);
+            setPlayers(players, index, pot);
         }
         break;
     case ChatType: {
@@ -149,17 +157,13 @@ void NetworkClient::reply(MessageType type, const QByteArray &data)
             emit chatReceived(name, chat);
         }
         break;
-    case StartGameType: {
-            qDebug() << "Start game received";
-        }
-        break;
     case CardsType: {
             QDataStream stream (data);
-            Card card1;
-            Card card2;
-            stream >> card1 >> card2;
-            qDebug() << card1.rank() << card1.suit();
-            qDebug() << card2.rank() << card2.suit();
+            QList<Card> cards;
+            stream >> cards;
+            foreach (const Card &card, cards) {
+                qDebug() << card.rank() << card.suit();
+            }
         }
         break;
     }

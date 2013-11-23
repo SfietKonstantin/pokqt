@@ -29,51 +29,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef GAMEMANAGER_H
-#define GAMEMANAGER_H
+.pragma library
 
-#include <QtCore/QObject>
-#include <QtCore/QMap>
-#include "playerproperties.h"
-#include "deck.h"
+// Margins
+var MARGIN_DEFAULT = 8
 
-class GameManager : public QObject
-{
-    Q_OBJECT
-public:
-    enum GameStatus {
-        Invalid,
-        WaitingPlayers,
-        PreparingGame,
+// Components size
+var PANEL_WIDTH = 200
+var PLAYER_DATA_WIDTH = 100
+var PLAYER_DATA_HEIGHT = 100
 
-    };
-
-    explicit GameManager(QObject *parent = 0);
-
-public slots:
-    void start();
-    void startGame();
-    void stop();
-    void addPlayer(QObject *handle, const QString &name);
-    void removePlayer(QObject *handle);
-    void chat(QObject *handle, const QString &message);
-signals:
-    void playersBroadcasted(const QList<PlayerProperties> &players, int pot);
-    void playerRefused(QObject *handle);
-    void chatSent(const QString &name, const QString &message);
-    void cardsDistributed(QObject *handle, const QList<Card> &card);
-private:
-    int index(int i);
-    void performBroadcastPlayers();
-    void prepareRound();
-    GameStatus m_status;
-    int m_initialPlayer;
-    int m_currentPlayer;
-    QList<QObject *> m_handles;
-    QMap<QObject *, PlayerProperties> m_playerProperties;
-    QMap<QObject *, bool> m_playerReady;
-    Deck m_deck;
-    int m_pot;
-};
-
-#endif // GAMEMANAGER_H
+var ICON_SIZE = 22
