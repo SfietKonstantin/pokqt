@@ -32,14 +32,14 @@
 #ifndef NETWORKCLIENT_H
 #define NETWORKCLIENT_H
 
-#include "pokqtnetwork_global.h"
+#include "pokqt_global.h"
 #include "helpers.h"
-#include "playerproperties.h"
 #include <QtCore/QObject>
 #include <QtCore/QStringList>
 #include <QtNetwork/QTcpSocket>
+#include "logic/playerproperties.h"
 
-class POKQTNETWORKSHARED_EXPORT NetworkClient : public QObject
+class POKQTSHARED_EXPORT NetworkClient : public QObject
 {
     Q_OBJECT
     Q_ENUMS(Status)

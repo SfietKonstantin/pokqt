@@ -32,32 +32,44 @@
 #ifndef NETWORKSERVER_H
 #define NETWORKSERVER_H
 
-#include "pokqtnetwork_global.h"
+#include "pokqt_global.h"
 #include "helpers.h"
-#include "playerproperties.h"
 #include <QtNetwork/QHostAddress>
+#include "logic/playerproperties.h"
 
 class QTcpSocket;
 class QTcpServer;
-class POKQTNETWORKSHARED_EXPORT NetworkServer: public QObject
+class POKQTSHARED_EXPORT NetworkServer: public QObject
 {
     Q_OBJECT
 public:
+    /*enum ServerState {
+        WaitingConnections,
+        Distributing,
+
+    };*/
+
     explicit NetworkServer(QObject *parent = 0);
 signals:
     void displayMessage(const QString &type, const QString &message);
+    void playerAdded(QTcpSocket *socket, const QString &name);
+    void playerRemoved(QTcpSocket *socket);
+    void chatReceived(QTcpSocket *socket, const QString &message);
 public slots:
     void startServer(int port);
     void stopServer();
+    void startGame();
+
+    void broadCastPlayers(const QList<PlayerProperties> &players);
+    void refusePlayer(QObject *handle);
+    void chat(const QString &name, const QString &message);
 private:
+    void distributeCards();
     void reply(QTcpSocket *socket, MessageType type, const QByteArray &data);
-    void replyPlayers();
-    void replyChat(QTcpSocket *socket, const QByteArray &data);
     QHostAddress m_address;
     int m_port;
     QTcpServer *m_server;
     QList<QTcpSocket *> m_sockets;
-    QMap<QTcpSocket *, PlayerProperties> m_playerProperties;
     QMap<QTcpSocket *, quint16> m_nextMessageSize;
 private slots:
     void slotNewConnection();

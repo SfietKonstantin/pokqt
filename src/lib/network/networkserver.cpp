@@ -34,9 +34,13 @@
 #include <QtCore/QDataStream>
 #include <QtNetwork/QTcpServer>
 #include <QtNetwork/QTcpSocket>
+#include "logic/card.h"
+
+// TODO: don't add too many players
 
 static const char *NET_TYPE = "net";
 static const char *CHAT_TYPE = "chat";
+static const char *GAME_TYPE = "game";
 
 NetworkServer::NetworkServer(QObject *parent)
     : QObject(parent)
@@ -53,43 +57,29 @@ void NetworkServer::startServer(int port)
 void NetworkServer::stopServer()
 {
     foreach (QTcpSocket *socket, m_sockets) {
+        emit playerRemoved(socket);
         socket->close();
         socket->deleteLater();
     }
 
     m_sockets.clear();
-    m_playerProperties.clear();
     m_server->close();
 }
 
-void NetworkServer::reply(QTcpSocket *socket, MessageType type, const QByteArray &data)
+void NetworkServer::startGame()
 {
-    switch (type) {
-    case PlayerType:
-        // Set the name
-        m_playerProperties[socket].setName(QString::fromUtf8(data));
-        m_playerProperties[socket].setTokenCount(1000); // TODO: variable number of tokens
-        replyPlayers();
-        break;
-    case ChatType:
-        replyChat(socket, data);
-        break;
+    // Broadcast start game to everybody
+    foreach (QTcpSocket *socket, m_sockets) {
+        sendMessage(socket, StartGameType);
     }
+
+    distributeCards();
 }
 
-void NetworkServer::replyPlayers()
+void NetworkServer::broadCastPlayers(const QList<PlayerProperties> &players)
 {
-    QList<PlayerProperties> players;
-
-    // Build the list of players
-    foreach (QTcpSocket *storedSocket, m_sockets) {
-        // If we have a socket that did not registered names yet,
-        // we put a placeholder empty string
-        players.append(m_playerProperties.value(storedSocket));
-    }
-
     // Send the data to each socket
-    for (int i = 0; i< m_sockets.count(); ++i) {
+    for (int i = 0; i < m_sockets.count(); ++i) {
         QByteArray data;
         QDataStream stream (&data, QIODevice::WriteOnly);
         stream << i << players;
@@ -97,20 +87,61 @@ void NetworkServer::replyPlayers()
     }
 }
 
-void NetworkServer::replyChat(QTcpSocket *socket, const QByteArray &data)
+void NetworkServer::refusePlayer(QObject *handle)
 {
-    // Get name
-    QString name = m_playerProperties[socket].name();
-    QString chat = QString::fromUtf8(data);
+    // Handles are sockets
+    QTcpSocket *socket = qobject_cast<QTcpSocket *>(handle);
+    if (!socket) {
+        return;
+    }
 
+    socket->disconnectFromHost();
+}
+
+void NetworkServer::chat(const QString &name, const QString &message)
+{
     QByteArray newData;
     QDataStream stream (&newData, QIODevice::WriteOnly);
-    stream << name << chat;
+    stream << name << message;
 
-    displayMessage(CHAT_TYPE, QString("%1: %2").arg(name, chat));
+    displayMessage(CHAT_TYPE, QString("%1: %2").arg(name, message));
 
-    foreach (QTcpSocket *playerSocket, m_sockets) {
-        sendMessage(playerSocket, ChatType, newData);
+    foreach (QTcpSocket *socket, m_sockets) {
+        sendMessage(socket, ChatType, newData);
+    }
+}
+
+void NetworkServer::distributeCards()
+{
+//    if (2 * m_sockets.count() + 5 > m_deck.count()) {
+//        m_deck.reset();
+//        m_deck.shuffle();
+//        emit displayMessage(GAME_TYPE, "Deck reshuffled");
+//    }
+
+//    // Distribute 2 cards to everybody
+//    foreach (QTcpSocket *socket, m_sockets) {
+//        QByteArray data;
+//        QDataStream stream (&data, QIODevice::WriteOnly);
+
+//        stream << m_deck.draw() << m_deck.draw();
+//        sendMessage(socket, CardsType, data);
+//    }
+}
+
+void NetworkServer::reply(QTcpSocket *socket, MessageType type, const QByteArray &data)
+{
+    switch (type) {
+    case PlayerType:
+        emit playerAdded(socket, QString::fromUtf8(data));
+        break;
+    case ChatType:
+        emit chatReceived(socket, QString::fromUtf8(data));
+        break;
+    case StartGameType: // Do nothing
+        break;
+    case CardsType: // Do nothing
+        break;
     }
 }
 
@@ -123,8 +154,6 @@ void NetworkServer::slotNewConnection()
     connect(socket, &QTcpSocket::readyRead, this, &NetworkServer::slotReadyRead);
 
     m_sockets.append(socket);
-    m_playerProperties.insert(socket, PlayerProperties());
-
     emit displayMessage(NET_TYPE, "New connection");
 }
 
@@ -138,17 +167,13 @@ void NetworkServer::slotDisconnected()
     qDebug() << "Received disconnection from" << socket;
 
     if (m_sockets.contains(socket)) {
-        m_playerProperties.remove(socket);
         m_nextMessageSize.remove(socket);
         m_sockets.removeAll(socket);
     }
 
+    emit playerRemoved(socket);
     socket->deleteLater();
-
     emit displayMessage(NET_TYPE, "Disconnection");
-
-    // Send the new list of players
-    replyPlayers();
 }
 
 void NetworkServer::slotReadyRead()

@@ -43,6 +43,7 @@ public:
     bool isEmpty() const;
     Card draw();
 public slots:
+    void clear();
     void reset();
     void shuffle();
 private:

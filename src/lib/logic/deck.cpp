@@ -56,6 +56,11 @@ Card Deck::draw()
     return m_cards.takeFirst();
 }
 
+void Deck::clear()
+{
+    m_cards.clear();
+}
+
 void Deck::reset()
 {
     m_cards.clear();

@@ -29,37 +29,59 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#include <QtWidgets/QApplication>
-#include <network/networkserver.h>
-#include <logic/gamemanager.h>
+#include "gamemanager.h"
+#include <QtCore/QDebug>
 
-#include "serverdialog.h"
-
-int main(int argc, char **argv)
+GameManager::GameManager(QObject *parent) :
+    QObject(parent)
 {
-    QApplication app (argc, argv);
+}
 
-    ServerDialog dialog;
-    NetworkServer server;
-    GameManager gameManager;
+void GameManager::addPlayer(QObject *handle, const QString &name)
+{
+    if (m_playerProperties.contains(handle)) {
+        qDebug() << Q_FUNC_INFO << "Player already registered for handle"
+                 << handle << "and name" << name;
+        return;
+    }
 
-    // Connections between dialog and server
-    QObject::connect(&server, &NetworkServer::displayMessage, &dialog, &ServerDialog::displayMessage);
-    QObject::connect(&dialog, &ServerDialog::start, &server, &NetworkServer::startServer);
-    QObject::connect(&dialog, &ServerDialog::startGame, &server, &NetworkServer::startGame);
-    QObject::connect(&dialog, &ServerDialog::stop, &server, &NetworkServer::stopServer);
+    m_handles.append(handle);
 
-    // Connections between server and game manager
-    QObject::connect(&server, &NetworkServer::playerAdded, &gameManager, &GameManager::addPlayer);
-    QObject::connect(&server, &NetworkServer::playerRemoved,
-                     &gameManager, &GameManager::removePlayer);
-    QObject::connect(&gameManager, &GameManager::playersBroadcasted,
-                     &server, &NetworkServer::broadCastPlayers);
-    QObject::connect(&server, &NetworkServer::chatReceived, &gameManager, &GameManager::chat);
-    QObject::connect(&gameManager, &GameManager::chatSent, &server, &NetworkServer::chat);
+    PlayerProperties properties;
+    properties.setName(name);
+    properties.setTokenCount(-1);
+    m_playerProperties.insert(handle, properties);
 
+    performBroadcastPlayers();
+}
 
-    dialog.show();
+void GameManager::removePlayer(QObject *handle)
+{
+    if (!m_playerProperties.contains(handle)) {
+        qDebug() << Q_FUNC_INFO << "Player not registered for handle" << handle;
+        return;
+    }
 
-    return app.exec();
+    m_handles.removeAll(handle);
+    m_playerProperties.remove(handle);
+
+    performBroadcastPlayers();
+}
+
+void GameManager::chat(QObject *handle, const QString &message)
+{
+    if (!m_playerProperties.contains(handle)) {
+        return;
+    }
+    emit chatSent(m_playerProperties.value(handle).name(), message);
+}
+
+void GameManager::performBroadcastPlayers()
+{
+    QList<PlayerProperties> players;
+    foreach (QObject *handle, m_handles) {
+        players.append(m_playerProperties.value(handle));
+    }
+
+    emit playersBroadcasted(players);
 }

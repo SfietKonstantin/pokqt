@@ -12,8 +12,8 @@
  *     notice, this list of conditions and the following disclaimer in
  *     the documentation and/or other materials provided with the
  *     distribution.
- *   * The names of its contributors may not be used to endorse or promote 
- *     products derived from this software without specific prior written 
+ *   * The names of its contributors may not be used to endorse or promote
+ *     products derived from this software without specific prior written
  *     permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -27,26 +27,38 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
- */ 
-
-#ifndef POKQTNETWORK_GLOBAL_H
-#define POKQTNETWORK_GLOBAL_H
-
-/**
- * @file pokqtnetwork_global.h
- * @short pokQt network library global defines
  */
 
-#include <QtCore/qglobal.h>
+#ifndef GAMEMANAGER_H
+#define GAMEMANAGER_H
 
-/**
- * @def POKQTNETWORKSHARED_EXPORT
- * @short pokQt network library export
- */
-#if defined(POKQTNETWORK_LIBRARY)
-#  define POKQTNETWORKSHARED_EXPORT Q_DECL_EXPORT
-#else
-#  define POKQTNETWORKSHARED_EXPORT Q_DECL_IMPORT
-#endif
+#include <QtCore/QObject>
+#include <QtCore/QMap>
+#include "playerproperties.h"
 
-#endif // POKQTNETWORK_GLOBAL_H
+class GameManager : public QObject
+{
+    Q_OBJECT
+public:
+    enum GameStatus {
+        WaitingPlayers,
+
+    };
+
+    explicit GameManager(QObject *parent = 0);
+
+public slots:
+    void addPlayer(QObject *handle, const QString &name);
+    void removePlayer(QObject *handle);
+    void chat(QObject *handle, const QString &message);
+signals:
+    void playersBroadcasted(const QList<PlayerProperties> &players);
+    void playerRefused(QObject *handle);
+    void chatSent(const QString &name, const QString &message);
+private:
+    void performBroadcastPlayers();
+    QList<QObject *> m_handles;
+    QMap<QObject *, PlayerProperties> m_playerProperties;
+};
+
+#endif // GAMEMANAGER_H

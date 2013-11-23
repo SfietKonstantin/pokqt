@@ -33,6 +33,7 @@
 #include "osignal.h"
 #include <QtCore/QDataStream>
 #include <QtNetwork/QHostAddress>
+#include "logic/card.h"
 
 NetworkClient::NetworkClient(QObject *parent) :
     QObject(parent), m_status(NotConnected), m_nextMessageSize(-1)
@@ -148,6 +149,19 @@ void NetworkClient::reply(MessageType type, const QByteArray &data)
             emit chatReceived(name, chat);
         }
         break;
+    case StartGameType: {
+            qDebug() << "Start game received";
+        }
+        break;
+    case CardsType: {
+            QDataStream stream (data);
+            Card card1;
+            Card card2;
+            stream >> card1 >> card2;
+            qDebug() << card1.rank() << card1.suit();
+            qDebug() << card2.rank() << card2.suit();
+        }
+        break;
     }
 }
 
@@ -168,33 +182,35 @@ void NetworkClient::slotReadyRead()
 {
     qDebug() << "Received data";
 
-    if (m_nextMessageSize == -1) {
-        // We read the size of the message
-        if ((uint) m_socket->bytesAvailable() < sizeof(quint16)) {
+    while (m_socket->bytesAvailable()) {
+        if (m_nextMessageSize == -1) {
+            // We read the size of the message
+            if ((uint) m_socket->bytesAvailable() < sizeof(quint16)) {
+                return;
+            }
+
+            quint16 size;
+            QDataStream in(m_socket);
+            in >> size;
+            m_nextMessageSize = (int) size;
+
+            qDebug() << "Next message will be size of" << m_nextMessageSize;
+        }
+
+        // We read the content of the socket
+        if (m_socket->bytesAvailable() < m_nextMessageSize) {
             return;
         }
 
-        quint16 size;
-        QDataStream in(m_socket);
-        in >> size;
-        m_nextMessageSize = (int) size;
+        QDataStream in (m_socket->read(m_nextMessageSize));
+        quint16 typeInt;
+        QByteArray data;
+        in >> typeInt;
+        in >> data;
+        MessageType type = (MessageType) typeInt;
+        qDebug() << "Received data" << type << "of size" << data.size();
+        m_nextMessageSize = -1;
 
-        qDebug() << "Next message will be size of" << m_nextMessageSize;
+        reply(type, data);
     }
-
-    // We read the content of the socket
-    if (m_socket->bytesAvailable() < m_nextMessageSize) {
-        return;
-    }
-
-    QDataStream in (m_socket);
-    quint16 typeInt;
-    QByteArray data;
-    in >> typeInt;
-    in >> data;
-    MessageType type = (MessageType) typeInt;
-    qDebug() << "Received data" << type << "of size" << data.size();
-    m_nextMessageSize = -1;
-
-    reply(type, data);
 }

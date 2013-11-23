@@ -98,7 +98,44 @@ Card::Suit Card::suit() const
     return m_suit;
 }
 
+void Card::setSuit(Suit suit)
+{
+    switch (suit) {
+    case Club:
+    case Diamond:
+    case Heart:
+    case Spade:
+        m_suit = suit;
+        break;
+    default:
+        break;
+    }
+}
+
 int Card::rank() const
 {
     return m_rank;
+}
+
+void Card::setRank(int rank)
+{
+    if (rank >= 0 && rank <= 12) {
+        m_rank = rank;
+    }
+}
+
+QDataStream &operator <<(QDataStream &stream, const Card &card)
+{
+    stream << (qint16) card.suit() << (qint16) card.rank();
+    return stream;
+}
+
+QDataStream &operator >>(QDataStream &stream, Card &card)
+{
+    qint16 suit;
+    qint16 rank;
+    stream >> suit >> rank;
+    card.setSuit((Card::Suit) suit);
+    card.setRank(rank);
+    return stream;
 }

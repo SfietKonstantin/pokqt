@@ -48,11 +48,13 @@ public:
 signals:
     void start(int port);
     void stop();
+    void startGame();
 public slots:
     void displayMessage(const QString &type, const QString &message);
 private slots:
     void startClicked();
     void stopClicked();
+    void slotStartGameClicked();
 private:
     Ui::ServerDialog *ui;
 };

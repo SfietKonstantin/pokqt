@@ -33,7 +33,7 @@
 #include <QtQml/qqml.h>
 #include <QtQml/QQmlEngine>
 #include <QtQuick/QQuickView>
-#include <networkclient.h>
+#include <network/networkclient.h>
 #include "playersmodel.h"
 
 // "Functor" to be used in Qt compile-time check "connect"

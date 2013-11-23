@@ -29,15 +29,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */ 
 
-#ifndef POKQTLOGIC_GLOBAL_H
-#define POKQTLOGIC_GLOBAL_H
+#ifndef POKQT_GLOBAL_H
+#define POKQT_GLOBAL_H
+
+/**
+ * @file pokqt_global.h
+ * @short pokQt library global defines
+ */
 
 #include <QtCore/qglobal.h>
 
-#if defined(POKQTLOGIC_LIBRARY)
-#  define POKQTLOGICSHARED_EXPORT Q_DECL_EXPORT
+/**
+ * @def POKQTSHARED_EXPORT
+ * @short pokQt library export
+ */
+#if defined(POKQT_LIBRARY)
+#  define POKQTSHARED_EXPORT Q_DECL_EXPORT
 #else
-#  define POKQTLOGICSHARED_EXPORT Q_DECL_IMPORT
+#  define POKQTSHARED_EXPORT Q_DECL_IMPORT
 #endif
 
-#endif // POKQTLOGIC_GLOBAL_H
+#endif // POKQT_GLOBAL_H

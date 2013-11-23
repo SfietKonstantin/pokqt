@@ -33,8 +33,8 @@
 #define PLAYERSMODEL_H
 
 #include <QtCore/QAbstractListModel>
-#include <playerproperties.h>
-#include <networkclient.h>
+#include <network/networkclient.h>
+#include <logic/playerproperties.h>
 
 class PlayersModel : public QAbstractListModel
 {

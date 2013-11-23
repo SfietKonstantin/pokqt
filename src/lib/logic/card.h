@@ -32,9 +32,10 @@
 #ifndef CARD_H
 #define CARD_H
 
-#include "pokqtlogic_global.h"
+#include "pokqt_global.h"
+#include <QtCore/QDataStream>
 
-class POKQTLOGICSHARED_EXPORT Card
+class POKQTSHARED_EXPORT Card
 {
 public:
     enum Suit {
@@ -51,10 +52,15 @@ public:
     bool operator<(const Card &other);
     bool isValid() const;
     Suit suit() const;
+    void setSuit(Suit suit);
     int rank() const;
+    void setRank(int rank);
 private:
     Suit m_suit;
     int m_rank;
 };
+
+QDataStream &operator <<(QDataStream &stream, const Card &card);
+QDataStream &operator >>(QDataStream &stream, Card &card);
 
 #endif // CARD_H

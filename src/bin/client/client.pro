@@ -2,8 +2,8 @@ TEMPLATE = app
 TARGET = pokqt-client
 
 QT = core gui network quick
-INCLUDEPATH+=../../lib/network
-LIBS+=-L../../lib/network -lpokqtnetwork
+INCLUDEPATH+=../../lib/
+LIBS+=-L../../lib/ -lpokqt
 
 SOURCES += \
     main.cpp \

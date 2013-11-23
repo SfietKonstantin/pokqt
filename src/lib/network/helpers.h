@@ -40,8 +40,27 @@
 
 enum MessageType {
     PlayerType,
-    ChatType
+    ChatType,
+    StartGameType,
+    CardsType
 };
+
+inline static void sendMessage(QTcpSocket *socket, MessageType messageType)
+{
+    QByteArray data;
+    QDataStream stream (&data, QIODevice::WriteOnly);
+
+    stream << (quint16) 0; // Initial size of the packet
+    stream << (quint16) messageType;
+
+    // Write size
+    stream.device()->seek(0);
+    stream << (quint16) (data.size() - sizeof(quint16));
+
+    qDebug() << "Send message of size" << (data.size() - sizeof(quint16));
+
+    socket->write(data);
+}
 
 inline static void sendMessage(QTcpSocket *socket, MessageType messageType,
                                const QByteArray &message)

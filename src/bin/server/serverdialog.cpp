@@ -39,6 +39,7 @@ ServerDialog::ServerDialog(QWidget *parent) :
     ui->setupUi(this);
     connect(ui->startPushButton, &QPushButton::clicked, this, &ServerDialog::startClicked);
     connect(ui->stopPushButton, &QPushButton::clicked, this, &ServerDialog::stopClicked);
+    connect(ui->startGamePushButton, &QPushButton::clicked, this, &ServerDialog::slotStartGameClicked);
 }
 
 ServerDialog::~ServerDialog()
@@ -54,6 +55,7 @@ void ServerDialog::displayMessage(const QString &type, const QString &message)
 void ServerDialog::startClicked()
 {
     ui->startPushButton->setEnabled(false);
+    ui->startGamePushButton->setEnabled(true);
     ui->stopPushButton->setEnabled(true);
     emit start(ui->portSpinBox->value());
 }
@@ -61,6 +63,15 @@ void ServerDialog::startClicked()
 void ServerDialog::stopClicked()
 {
     ui->startPushButton->setEnabled(true);
+    ui->startGamePushButton->setEnabled(false);
     ui->stopPushButton->setEnabled(false);
     emit stop();
+}
+
+void ServerDialog::slotStartGameClicked()
+{
+    ui->startPushButton->setEnabled(false);
+    ui->startGamePushButton->setEnabled(false);
+    ui->stopPushButton->setEnabled(true);
+    emit startGame();
 }
