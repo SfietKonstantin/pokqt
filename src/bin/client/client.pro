@@ -5,9 +5,18 @@ QT = core gui network quick
 INCLUDEPATH+=../../lib/
 LIBS+=-L../../lib/ -lpokqt
 
+HEADERS += \
+    playersmodel.h \
+    clientbetmanager.h \
+    handmodel.h \
+    cardobject.h
+
 SOURCES += \
     main.cpp \
-    playersmodel.cpp
+    playersmodel.cpp \
+    clientbetmanager.cpp \
+    handmodel.cpp \
+    cardobject.cpp
 
 OTHER_FILES += \
     main.qml \
@@ -15,10 +24,9 @@ OTHER_FILES += \
     ChatPanel.qml \
     PlayerData.qml \
     UiConstants.js \
-    GamingBoard.qml
+    GamingBoard.qml \
+    Card.qml
 
 RESOURCES += \
     res.qrc
 
-HEADERS += \
-    playersmodel.h

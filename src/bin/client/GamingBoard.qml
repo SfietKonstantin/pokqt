@@ -30,7 +30,9 @@
  */
 
 import QtQuick 2.0
+import QtQuick.Controls 1.0
 import com.ecp.isia.pokqt 1.0
+import "UiConstants.js" as Ui
 
 Item {
     id: gamingBoard
@@ -65,10 +67,85 @@ Item {
     }
 
     PlayerData {
+        id: player
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         name: playersModel.name
         tokenCount: playersModel.tokenCount
         betCount: playersModel.betCount
+    }
+
+    BetManager {
+        id: betManager
+        client: networkClient
+    }
+
+    Column {
+        id: buttons
+        visible: networkClient.turn
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+
+        SpinBox {
+            id: betSpin
+            onMinimumValueChanged: value = minimumValue
+            minimumValue: Math.max(0, betManager.minBet - playersModel.betCount)
+            maximumValue: Math.min(betManager.maxBet - playersModel.betCount,
+                                   playersModel.tokenCount - playersModel.betCount)
+        }
+
+        Button {
+            text: qsTr("Raise")
+            onClicked: betManager.raise(betSpin.value)
+        }
+        Button {
+            text: betManager.check ? qsTr("Check") : qsTr("Call")
+            onClicked: betManager.call()
+        }
+        Button {
+            text: qsTr("Fold")
+            onClicked: betManager.fold()
+        }
+    }
+
+    Item {
+        anchors.left: buttons.right; anchors.right: player.left
+        anchors.top: player.top; anchors.bottom: parent.bottom
+
+        Row {
+            anchors.centerIn: parent
+            spacing: Ui.MARGIN_DEFAULT
+            Repeater {
+                model: HandModel {
+                    client: networkClient
+                }
+                delegate: Card {
+                    visible: model.cardType == HandModel.Hand
+                    width: model.cardType == HandModel.Hand ? Ui.CARD_WIDTH_BIG : 0
+                    height: model.cardType == HandModel.Hand ? Ui.CARD_HEIGHT_BIG : 0
+                    radius: Ui.CARD_RADIUS_BIG
+                    suit: model.card.suit
+                    rank: model.card.rank
+                }
+            }
+        }
+    }
+
+    Row {
+        anchors.centerIn: parent
+        spacing: Ui.MARGIN_DEFAULT
+        Repeater {
+            model: HandModel {
+                client: networkClient
+            }
+            delegate: Card {
+                visible: model.cardType != HandModel.Hand
+                width: model.cardType != HandModel.Hand ? Ui.CARD_WIDTH_SMALL : 0
+                height: model.cardType != HandModel.Hand ? Ui.CARD_HEIGHT_SMALL : 0
+                radius: Ui.CARD_RADIUS_BIG
+                suit: model.card.suit
+                rank: model.card.rank
+            }
+        }
     }
 }

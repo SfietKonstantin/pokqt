@@ -32,12 +32,17 @@
 import QtQuick 2.0
 import "UiConstants.js" as Ui
 
-Rectangle {
+Item {
     width: Ui.PLAYER_DATA_WIDTH
     height: Ui.PLAYER_DATA_HEIGHT
     property alias name: name.text
     property alias tokenCount: tokenCountText.text
     property alias betCount: betCountText.text
+
+    Image {
+        anchors.fill: parent
+        source: "assets/player.png"
+    }
 
     Text {
         id: name

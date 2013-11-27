@@ -63,9 +63,15 @@ int main(int argc, char **argv)
                      &server, &NetworkServer::broadCastPlayers);
     QObject::connect(&server, &NetworkServer::chatReceived, &gameManager, &GameManager::chat);
     QObject::connect(&gameManager, &GameManager::chatSent, &server, &NetworkServer::chat);
-    QObject::connect(&gameManager, &GameManager::cardsDistributed,
-                     &server, &NetworkServer::distributeCards);
-
+    QObject::connect(&gameManager, &GameManager::newRound, &server, &NetworkServer::newRound);
+    QObject::connect(&gameManager, OSIGNAL2(GameManager, cardsDistributed, QObject *, const QList<Card> &),
+                     &server, OSLOT2(NetworkServer, distributeCards, QObject *, const QList<Card> &));
+    QObject::connect(&gameManager, OSIGNAL(GameManager, cardsDistributed, const QList<Card> &),
+                     &server, OSLOT(NetworkServer, distributeCards, const QList<Card> &));
+    QObject::connect(&gameManager, &GameManager::playerTurnSelected,
+                     &server, &NetworkServer::sendPlayerTurn);
+    QObject::connect(&server, &NetworkServer::actionReceived,
+                     &gameManager, &GameManager::performAction);
 
     dialog.show();
 

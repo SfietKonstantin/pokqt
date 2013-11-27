@@ -44,6 +44,7 @@ public:
     bool operator==(const Hand &other);
     bool operator<(const Hand &other);
     QList<Card> cards() const;
+    void addCard(const Card &card);
     void clear();
 private:
     QList<Card> m_cards;

@@ -29,65 +29,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef HELPERS_H
-#define HELPERS_H
+#ifndef HANDMODEL_H
+#define HANDMODEL_H
 
-#include <QtCore/QDebug>
-#include <QtCore/QDataStream>
-#include <QtNetwork/QTcpSocket>
+#include <QtCore/QAbstractListModel>
+#include <network/networkclient.h>
+#include "cardobject.h"
 
-// Todo: rename to globals or something like that
-
-enum MessageType {
-    PlayerType,
-    ChatType,
-    NewRoundType,
-    CardsType,
-    TurnType,
-    ActionType
+class HandModel : public QAbstractListModel
+{
+    Q_OBJECT
+    Q_ENUMS(CardType)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(NetworkClient *client READ client WRITE setClient NOTIFY clientChanged)
+public:
+    enum CardType {
+        Hand,
+        Flop,
+        Turn,
+        River
+    };
+    enum HandModelRole {
+        CardRole,
+        CardTypeRole
+    };
+    explicit HandModel(QObject *parent = 0);
+    QHash<int, QByteArray> roleNames() const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int count() const;
+    NetworkClient * client() const;
+    void setClient(NetworkClient *client);
+    QVariant data(const QModelIndex &index, int role) const;
+signals:
+    void countChanged();
+    void clientChanged();
+private:
+    QList<CardObject *> m_data;
+    NetworkClient *m_client;
+private slots:
+    void slotHandChanged();
 };
 
-inline static void sendMessage(QTcpSocket *socket, MessageType messageType)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
-
-    stream << (quint16) 0; // Initial size of the packet
-    stream << (quint16) messageType;
-
-    // Write size
-    stream.device()->seek(0);
-    stream << (quint16) (data.size() - sizeof(quint16));
-
-    qDebug() << "Send message of size" << (data.size() - sizeof(quint16));
-
-    socket->write(data);
-}
-
-inline static void sendMessage(QTcpSocket *socket, MessageType messageType,
-                               const QByteArray &message)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
-
-    stream << (quint16) 0; // Initial size of the packet
-    stream << (quint16) messageType;
-    stream << message;
-
-    // Write size
-    stream.device()->seek(0);
-    stream << (quint16) (data.size() - sizeof(quint16));
-
-    qDebug() << "Send message of size" << (data.size() - sizeof(quint16));
-
-    socket->write(data);
-}
-
-inline static void sendMessageString(QTcpSocket *socket, MessageType messageType,
-                                     const QString &message)
-{
-   sendMessage(socket, messageType, message.toUtf8());
-}
-
-
-#endif // HELPERS_H
+#endif // HANDMODEL_H

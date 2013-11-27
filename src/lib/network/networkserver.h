@@ -44,18 +44,13 @@ class POKQTSHARED_EXPORT NetworkServer: public QObject
 {
     Q_OBJECT
 public:
-    /*enum ServerState {
-        WaitingConnections,
-        Distributing,
-
-    };*/
-
     explicit NetworkServer(QObject *parent = 0);
 signals:
     void displayMessage(const QString &type, const QString &message);
     void playerAdded(QTcpSocket *socket, const QString &name);
     void playerRemoved(QTcpSocket *socket);
     void chatReceived(QTcpSocket *socket, const QString &message);
+    void actionReceived(QTcpSocket *socket, int tokenCount);
 public slots:
     void startServer(int port);
     void stopServer();
@@ -63,7 +58,10 @@ public slots:
     void broadCastPlayers(const QList<PlayerProperties> &players, int pot);
     void refusePlayer(QObject *handle);
     void chat(const QString &name, const QString &message);
+    void newRound();
     void distributeCards(QObject *handle, const QList<Card> &cards);
+    void distributeCards(const QList<Card> &cards);
+    void sendPlayerTurn(QObject *handle);
 private:
     void reply(QTcpSocket *socket, MessageType type, const QByteArray &data);
     QHostAddress m_address;

@@ -100,6 +100,13 @@ void NetworkServer::chat(const QString &name, const QString &message)
     }
 }
 
+void NetworkServer::newRound()
+{
+    foreach (QTcpSocket *socket, m_sockets) {
+        sendMessage(socket, NewRoundType);
+    }
+}
+
 void NetworkServer::distributeCards(QObject *handle, const QList<Card> &cards)
 {
     // Handles are sockets
@@ -111,8 +118,29 @@ void NetworkServer::distributeCards(QObject *handle, const QList<Card> &cards)
     QByteArray data;
     QDataStream stream (&data, QIODevice::WriteOnly);
     stream << cards;
-
     sendMessage(socket, CardsType, data);
+}
+
+void NetworkServer::distributeCards(const QList<Card> &cards)
+{
+    QByteArray data;
+    QDataStream stream (&data, QIODevice::WriteOnly);
+    stream << cards;
+
+    foreach (QTcpSocket *socket, m_sockets) {
+        sendMessage(socket, CardsType, data);
+    }
+}
+
+void NetworkServer::sendPlayerTurn(QObject *handle)
+{
+    // Handles are sockets
+    QTcpSocket *socket = qobject_cast<QTcpSocket *>(handle);
+    if (!socket) {
+        return;
+    }
+
+    sendMessage(socket, TurnType);
 }
 
 void NetworkServer::reply(QTcpSocket *socket, MessageType type, const QByteArray &data)
@@ -124,7 +152,19 @@ void NetworkServer::reply(QTcpSocket *socket, MessageType type, const QByteArray
     case ChatType:
         emit chatReceived(socket, QString::fromUtf8(data));
         break;
+    case NewRoundType: // Do nothing
+        break;
     case CardsType: // Do nothing
+        break;
+    case TurnType: // Do nothing
+        break;
+    case ActionType: {
+            int tokenCount;
+            QDataStream stream (data);
+            stream >> tokenCount;
+            emit actionReceived(socket, tokenCount);
+            sendMessage(socket, ActionType);
+        }
         break;
     }
 }

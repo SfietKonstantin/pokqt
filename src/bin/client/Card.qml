@@ -29,65 +29,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef HELPERS_H
-#define HELPERS_H
+import QtQuick 2.0
+import com.ecp.isia.pokqt 1.0
 
-#include <QtCore/QDebug>
-#include <QtCore/QDataStream>
-#include <QtNetwork/QTcpSocket>
+Rectangle {
+    property int rank
+    property int suit
 
-// Todo: rename to globals or something like that
+    Text {
+        function makeText() {
+            var text = ""
+            switch (suit) {
+            case CardObject.Spade:
+                text = "♠"
+                break
+            case CardObject.Heart:
+                text = "♥"
+                break
+            case CardObject.Diamond:
+                text = "♦"
+                break
+            case CardObject.Club:
+                text = "♣"
+                break
+            }
 
-enum MessageType {
-    PlayerType,
-    ChatType,
-    NewRoundType,
-    CardsType,
-    TurnType,
-    ActionType
-};
+            if (rank <= 9) {
+                text += (rank + 1)
+                return text
+            }
 
-inline static void sendMessage(QTcpSocket *socket, MessageType messageType)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
+            switch (rank) {
+            case 10:
+                text += "J"
+                break
+            case 11:
+                text += "Q"
+                break
+            case 12:
+                text += "K"
+                break
+            case 13:
+                text += "A"
+                break
+            default:
+                break
+            }
+            return text
+        }
 
-    stream << (quint16) 0; // Initial size of the packet
-    stream << (quint16) messageType;
-
-    // Write size
-    stream.device()->seek(0);
-    stream << (quint16) (data.size() - sizeof(quint16));
-
-    qDebug() << "Send message of size" << (data.size() - sizeof(quint16));
-
-    socket->write(data);
+        anchors.centerIn: parent
+        color: suit == CardObject.Diamond || suit == CardObject.Heart ? "red" : "black"
+        text:  makeText()
+    }
 }
-
-inline static void sendMessage(QTcpSocket *socket, MessageType messageType,
-                               const QByteArray &message)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
-
-    stream << (quint16) 0; // Initial size of the packet
-    stream << (quint16) messageType;
-    stream << message;
-
-    // Write size
-    stream.device()->seek(0);
-    stream << (quint16) (data.size() - sizeof(quint16));
-
-    qDebug() << "Send message of size" << (data.size() - sizeof(quint16));
-
-    socket->write(data);
-}
-
-inline static void sendMessageString(QTcpSocket *socket, MessageType messageType,
-                                     const QString &message)
-{
-   sendMessage(socket, messageType, message.toUtf8());
-}
-
-
-#endif // HELPERS_H

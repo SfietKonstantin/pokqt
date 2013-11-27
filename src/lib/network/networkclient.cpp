@@ -36,9 +36,9 @@
 #include "logic/card.h"
 
 NetworkClient::NetworkClient(QObject *parent) :
-    QObject(parent), m_status(NotConnected), m_pot(0), m_nextMessageSize(-1)
+    QObject(parent), m_status(NotConnected), m_index(-1), m_pot(0), m_turn(false)
+    , m_nextMessageSize(-1)
 {
-    m_index = -1;
     m_socket = new QTcpSocket(this);
     connect(m_socket, &QTcpSocket::connected, this, &NetworkClient::slotConnected);
     connect(m_socket, OSIGNAL(QTcpSocket, error, QAbstractSocket::SocketError),
@@ -51,21 +51,26 @@ NetworkClient::Status NetworkClient::status() const
     return m_status;
 }
 
-QString NetworkClient::playerName() const
+QString NetworkClient::name() const
 {
-    return m_playerName;
+    return m_name;
 }
 
-void NetworkClient::setPlayerName(const QString &playerName)
+void NetworkClient::setName(const QString &name)
 {
-    if (m_playerName != playerName) {
-        m_playerName = playerName;
-        emit playerNameChanged();
+    if (m_name != name) {
+        m_name = name;
+        emit nameChanged();
 
         if (m_status != NotConnected) {
-            qWarning() << "Nickname will not be changed before next connection";
+            qWarning() << "Name will not be changed before next connection";
         }
     }
+}
+
+bool NetworkClient::turn() const
+{
+    return m_turn;
 }
 
 QList<PlayerProperties> NetworkClient::players() const
@@ -81,6 +86,11 @@ int NetworkClient::index() const
 int NetworkClient::pot() const
 {
     return m_pot;
+}
+
+Hand NetworkClient::hand() const
+{
+    return m_hand;
 }
 
 void NetworkClient::connectToHost(const QString &host, int port)
@@ -101,6 +111,19 @@ void NetworkClient::disconnectFromHost()
 void NetworkClient::sendChat(const QString &chat)
 {
     sendMessageString(m_socket, ChatType, chat);
+}
+
+void NetworkClient::sendBet(int tokenCount)
+{
+    QByteArray data;
+    QDataStream stream (&data, QIODevice::WriteOnly);
+    stream << tokenCount;
+    sendMessage(m_socket, ActionType, data);
+}
+
+void NetworkClient::sendFold()
+{
+    sendBet(-1);
 }
 
 void NetworkClient::setStatus(Status status)
@@ -133,10 +156,10 @@ void NetworkClient::reply(MessageType type, const QByteArray &data)
             stream >> index >> players >> pot;
             if (m_status == Registering) {
                 QString playerName = players.value(index).name();
-                if (m_playerName != playerName) {
+                if (m_name != playerName) {
                     qWarning() << "Nickname receivend from server do not match";
                     qWarning() << "You might have changed nickname before being registered";
-                    setPlayerName(playerName);
+                    setName(playerName);
                 }
 
                 setStatus(Connected);
@@ -157,12 +180,33 @@ void NetworkClient::reply(MessageType type, const QByteArray &data)
             emit chatReceived(name, chat);
         }
         break;
+    case NewRoundType: {
+            m_hand.clear();
+            emit handChanged();
+        }
+        break;
     case CardsType: {
             QDataStream stream (data);
             QList<Card> cards;
             stream >> cards;
             foreach (const Card &card, cards) {
-                qDebug() << card.rank() << card.suit();
+                m_hand.addCard(card);
+            }
+            emit handChanged();
+        }
+        break;
+    case TurnType: {
+            if (!m_turn) {
+                m_turn = true;
+                emit turnChanged();
+            }
+            qDebug() << "My turn !";
+        }
+        break;
+    case ActionType: {
+            if (m_turn) {
+                m_turn = false;
+                emit turnChanged();
             }
         }
         break;
@@ -173,7 +217,7 @@ void NetworkClient::slotConnected()
 {
     qDebug() << "Connected, sending nickname";
     setStatus(Registering);
-    sendMessageString(m_socket, PlayerType, m_playerName);
+    sendMessageString(m_socket, PlayerType, m_name);
 }
 
 void NetworkClient::slotError(QAbstractSocket::SocketError error)

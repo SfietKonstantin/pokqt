@@ -35,6 +35,9 @@
 #include <QtQuick/QQuickView>
 #include <network/networkclient.h>
 #include "playersmodel.h"
+#include "clientbetmanager.h"
+#include "handmodel.h"
+#include "cardobject.h"
 
 // "Functor" to be used in Qt compile-time check "connect"
 // Connecting to QCoreApplication::quit fails, because it is
@@ -53,6 +56,9 @@ int main(int argc, char **argv)
 
     qmlRegisterType<NetworkClient>("com.ecp.isia.pokqt", 1, 0, "NetworkClient");
     qmlRegisterType<PlayersModel>("com.ecp.isia.pokqt", 1, 0, "PlayersModel");
+    qmlRegisterType<ClientBetManager>("com.ecp.isia.pokqt", 1, 0, "BetManager");
+    qmlRegisterType<CardObject>("com.ecp.isia.pokqt", 1, 0, "CardObject");
+    qmlRegisterType<HandModel>("com.ecp.isia.pokqt", 1, 0, "HandModel");
 
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:/main.qml"));

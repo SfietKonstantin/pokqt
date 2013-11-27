@@ -29,65 +29,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
-#ifndef HELPERS_H
-#define HELPERS_H
+#ifndef CLIENTBETMANAGER_H
+#define CLIENTBETMANAGER_H
 
-#include <QtCore/QDebug>
-#include <QtCore/QDataStream>
-#include <QtNetwork/QTcpSocket>
+#include <QtCore/QObject>
+#include <network/networkclient.h>
+#include <logic/betmanager.h>
 
-// Todo: rename to globals or something like that
-
-enum MessageType {
-    PlayerType,
-    ChatType,
-    NewRoundType,
-    CardsType,
-    TurnType,
-    ActionType
+class ClientBetManager : public BetManager
+{
+    Q_OBJECT
+    Q_PROPERTY(NetworkClient *client READ client WRITE setClient NOTIFY clientChanged)
+    Q_PROPERTY(bool check READ isCheck NOTIFY checkChanged)
+public:
+    explicit ClientBetManager(QObject *parent = 0);
+    NetworkClient * client() const;
+    void setClient(NetworkClient *client);
+    bool isCheck() const;
+    Q_INVOKABLE bool raise(int raisedTokenCount);
+    Q_INVOKABLE bool call();
+signals:
+    void clientChanged();
+    void checkChanged();
+    void betSent(int tokenCount);
+    void foldSent();
+public slots:
+    void fold();
+private slots:
+    void slotPlayersChanged();
+private:
+    bool m_check;
+    NetworkClient *m_client;
 };
 
-inline static void sendMessage(QTcpSocket *socket, MessageType messageType)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
-
-    stream << (quint16) 0; // Initial size of the packet
-    stream << (quint16) messageType;
-
-    // Write size
-    stream.device()->seek(0);
-    stream << (quint16) (data.size() - sizeof(quint16));
-
-    qDebug() << "Send message of size" << (data.size() - sizeof(quint16));
-
-    socket->write(data);
-}
-
-inline static void sendMessage(QTcpSocket *socket, MessageType messageType,
-                               const QByteArray &message)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
-
-    stream << (quint16) 0; // Initial size of the packet
-    stream << (quint16) messageType;
-    stream << message;
-
-    // Write size
-    stream.device()->seek(0);
-    stream << (quint16) (data.size() - sizeof(quint16));
-
-    qDebug() << "Send message of size" << (data.size() - sizeof(quint16));
-
-    socket->write(data);
-}
-
-inline static void sendMessageString(QTcpSocket *socket, MessageType messageType,
-                                     const QString &message)
-{
-   sendMessage(socket, messageType, message.toUtf8());
-}
-
-
-#endif // HELPERS_H
+#endif // CLIENTBETMANAGER_H

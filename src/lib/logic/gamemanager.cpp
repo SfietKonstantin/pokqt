@@ -32,14 +32,16 @@
 #include "gamemanager.h"
 #include <QtCore/QDebug>
 #include <QtCore/QDateTime>
+#include "betmanager.h"
 
 static const int INITIAL_TOKEN_COUNT = 1000;
-static const int SMALL_BLEND = 10;
-static const int BIG_BLEND = 20;
+static const int SMALL_BLIND = 10;
+static const int BIG_BLIND = 20;
 
 
 GameManager::GameManager(QObject *parent) :
-    QObject(parent), m_status(Invalid), m_initialPlayer(-1), m_currentPlayer(-1), m_pot(0)
+    QObject(parent), m_status(Invalid), m_middleCardsState(Initial), m_initialPlayer(-1)
+    , m_currentPlayer(-1), m_pot(0) , m_betManager(new BetManager(this)), m_maxBetHandle(0)
 {
 }
 
@@ -104,26 +106,58 @@ void GameManager::chat(QObject *handle, const QString &message)
     emit chatSent(m_playerProperties.value(handle).name(), message);
 }
 
+void GameManager::performAction(QObject *handle, int tokenCount)
+{
+    if (tokenCount == -1) {
+        m_playerProperties[handle].setInGame(false);
+        m_playerProperties[handle].setBetCount(0);
+    } else {
+        const PlayerProperties &player = m_playerProperties.value(handle);
+        m_playerProperties[handle].setBetCount(player.betCount() + tokenCount);
+        m_playerProperties[handle].setTokenCount(player.tokenCount() - tokenCount);
+        m_pot += tokenCount;
+
+        // TODO: broadcast some messages, and add some checks here
+    }
+
+    performBroadcastPlayers();
+    nextTurn();
+}
+
 int GameManager::index(int i)
 {
     return (i % m_handles.count());
 }
 
-void GameManager::performBroadcastPlayers()
+QList<PlayerProperties> GameManager::getPlayers() const
 {
     QList<PlayerProperties> players;
     foreach (QObject *handle, m_handles) {
         players.append(m_playerProperties.value(handle));
     }
 
-    emit playersBroadcasted(players, m_pot);
+    return players;
+}
+
+void GameManager::performBroadcastPlayers()
+{
+    emit playersBroadcasted(getPlayers(), m_pot);
 }
 
 void GameManager::prepareRound()
 {
+    emit newRound();
+
     if (2 * m_handles.count() + 5 > m_deck.count()) {
         m_deck.reset();
         m_deck.shuffle();
+    }
+
+    m_middleCardsState = Initial;
+
+    // All are in game
+    foreach (QObject *handle, m_handles) {
+        m_playerProperties[handle].setInGame(true);
     }
 
     // Distribute 2 cards to everybody
@@ -137,16 +171,105 @@ void GameManager::prepareRound()
     m_initialPlayer = index(m_initialPlayer + 1);
     m_currentPlayer = index(m_initialPlayer + 2);
 
-    // Take small and big blends
-    PlayerProperties &firstPlayer = m_playerProperties[m_handles[index(m_initialPlayer)]];
-    int smallBlend = qMin(SMALL_BLEND, firstPlayer.tokenCount());
-    firstPlayer.setTokenCount(firstPlayer.tokenCount() - smallBlend);
+    m_betManager->setPlayers(getPlayers());
+
+    // Take small and big blinds
+    PlayerProperties &firstPlayer = m_playerProperties[m_handles[m_initialPlayer]];
+    int smallBlind = qMin(SMALL_BLIND, m_betManager->maxBet());
+    firstPlayer.setTokenCount(firstPlayer.tokenCount() - smallBlind);
+    firstPlayer.setBetCount(firstPlayer.betCount() + smallBlind);
 
     PlayerProperties &secondPlayer = m_playerProperties[m_handles[index(m_initialPlayer + 1)]];
-    int bigBlend = qMin(BIG_BLEND, secondPlayer.tokenCount());
-    secondPlayer.setTokenCount(secondPlayer.tokenCount() - bigBlend);
+    int bigBlind = qMin(BIG_BLIND, m_betManager->maxBet());
+    secondPlayer.setTokenCount(secondPlayer.tokenCount() - bigBlind);
+    secondPlayer.setBetCount(secondPlayer.betCount() + bigBlind);
 
-
-    m_pot = smallBlend + bigBlend;
+    m_pot = smallBlind + bigBlind;
     performBroadcastPlayers();
+
+    m_maxBetHandle = 0;
+
+    if (smallBlind < bigBlind) {
+        m_maxBetHandle = m_handles[index(m_initialPlayer + 1)];
+    } else {
+        m_maxBetHandle = m_handles[m_initialPlayer];
+    }
+
+    emit playerTurnSelected(m_handles[m_currentPlayer]);
+}
+
+void GameManager::nextTurn()
+{
+    // Check if the game is finished
+    int inGameCount = 0;
+    foreach (QObject *handle, m_handles) {
+        const PlayerProperties &player = m_playerProperties.value(handle);
+        if (player.isInGame()) {
+            inGameCount ++;
+        }
+    }
+
+    if (inGameCount == 1) {
+
+    }
+
+    // TODO
+
+    // Compute best player
+    foreach (QObject *handle, m_handles) {
+        const PlayerProperties &best = m_playerProperties.value(m_maxBetHandle);
+        const PlayerProperties &player = m_playerProperties.value(handle);
+        if (best.betCount() < player.betCount()) {
+            m_maxBetHandle = handle;
+        }
+    }
+
+    if (m_maxBetHandle == m_handles[m_currentPlayer]) {
+        qDebug() << "Player with max bet reached";
+        switch (m_middleCardsState) {
+        case Initial:
+            distributeMiddleCards(3);
+            m_middleCardsState = Flop;
+            break;
+        case Flop:
+            distributeMiddleCards(1);
+            m_middleCardsState = Turn;
+            break;
+        case Turn:
+            distributeMiddleCards(1);
+            m_middleCardsState = River;
+            break;
+        case River:
+            qDebug() << "TODO here !";
+            break;
+        }
+    }
+
+    // Avance to next player
+    int indexNext = index(m_currentPlayer + 1);
+    bool ok = m_playerProperties.value(m_handles[indexNext]).isInGame();
+    while (!ok && indexNext != m_currentPlayer) {
+        indexNext = index(indexNext + 1);
+        ok = m_playerProperties.value(m_handles[indexNext]).isInGame();
+    }
+
+    qDebug() << "Next player selected" << indexNext;
+    m_currentPlayer = indexNext;
+
+    emit playerTurnSelected(m_handles[m_currentPlayer]);
+}
+
+void GameManager::cleanUpRound()
+{
+
+}
+
+void GameManager::distributeMiddleCards(int count)
+{
+    QList<Card> cards;
+    for (int i = 0; i < count; i++) {
+        cards.append(m_deck.draw());
+    }
+
+    emit cardsDistributed(cards);
 }

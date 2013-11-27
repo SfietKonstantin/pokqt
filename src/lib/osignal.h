@@ -53,4 +53,16 @@
 #define OSIGNAL0(CLASS, NAME) \
     static_cast<void (CLASS::*)()>(&CLASS::NAME)
 
+#define OSIGNAL2(CLASS, NAME, ARG1, ARG2) \
+    static_cast<void (CLASS::*)(ARG1, ARG2)>(&CLASS::NAME)
+
+#define OSLOT(CLASS, NAME, ARG) \
+    static_cast<void (CLASS::*)(ARG)>(&CLASS::NAME)
+
+#define OSLOT0(CLASS, NAME) \
+    static_cast<void (CLASS::*)()>(&CLASS::NAME)
+
+#define OSLOT2(CLASS, NAME, ARG1, ARG2) \
+    static_cast<void (CLASS::*)(ARG1, ARG2)>(&CLASS::NAME)
+
 #endif // OSIGNAL_H

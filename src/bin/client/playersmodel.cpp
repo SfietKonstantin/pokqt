@@ -65,7 +65,6 @@ NetworkClient * PlayersModel::client() const
 void PlayersModel::setClient(NetworkClient *client)
 {
     if (m_client != client) {
-
         // Disconnect old client
         if (m_client) {
             disconnect(m_client, &NetworkClient::playersChanged, this, &PlayersModel::slotPlayersChanged);

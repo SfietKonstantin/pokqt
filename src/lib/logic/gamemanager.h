@@ -37,6 +37,7 @@
 #include "playerproperties.h"
 #include "deck.h"
 
+class BetManager;
 class GameManager : public QObject
 {
     Q_OBJECT
@@ -57,23 +58,39 @@ public slots:
     void addPlayer(QObject *handle, const QString &name);
     void removePlayer(QObject *handle);
     void chat(QObject *handle, const QString &message);
+    void performAction(QObject *handle, int tokenCount);
 signals:
     void playersBroadcasted(const QList<PlayerProperties> &players, int pot);
     void playerRefused(QObject *handle);
     void chatSent(const QString &name, const QString &message);
+    void newRound();
+    void cardsDistributed(const QList<Card> &card);
     void cardsDistributed(QObject *handle, const QList<Card> &card);
+    void playerTurnSelected(QObject *handle);
 private:
+    enum MiddleCardsState {
+        Initial,
+        Flop,
+        Turn,
+        River
+    };
     int index(int i);
+    QList<PlayerProperties> getPlayers() const;
     void performBroadcastPlayers();
     void prepareRound();
+    void nextTurn();
+    void cleanUpRound();
+    void distributeMiddleCards(int count);
     GameStatus m_status;
+    MiddleCardsState m_middleCardsState;
     int m_initialPlayer;
     int m_currentPlayer;
     QList<QObject *> m_handles;
     QMap<QObject *, PlayerProperties> m_playerProperties;
-    QMap<QObject *, bool> m_playerReady;
     Deck m_deck;
     int m_pot;
+    BetManager *m_betManager;
+    QObject *m_maxBetHandle;
 };
 
 #endif // GAMEMANAGER_H

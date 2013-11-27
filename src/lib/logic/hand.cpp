@@ -62,6 +62,11 @@ QList<Card> Hand::cards() const
     return m_cards;
 }
 
+void Hand::addCard(const Card &card)
+{
+    m_cards.append(card);
+}
+
 void Hand::clear()
 {
     m_cards.clear();

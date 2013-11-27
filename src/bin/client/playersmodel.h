@@ -74,6 +74,7 @@ private:
     QList<PlayerProperties> m_data;
     NetworkClient *m_client;
     PlayerProperties m_player;
+private slots:
     void slotPlayersChanged();
 };
 

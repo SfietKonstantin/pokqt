@@ -82,6 +82,8 @@ public:
     void setTokenCount(int tokenCount);
     int betCount() const;
     void setBetCount(int betCount);
+    bool isInGame() const;
+    void setInGame(bool inGame);
     /**
      * @brief Equality
      *
@@ -104,6 +106,7 @@ private:
      */
     int m_tokenCount;
     int m_betCount;
+    bool m_inGame;
 };
 
 /**

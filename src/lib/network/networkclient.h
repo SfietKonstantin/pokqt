@@ -38,13 +38,15 @@
 #include <QtCore/QStringList>
 #include <QtNetwork/QTcpSocket>
 #include "logic/playerproperties.h"
+#include "logic/hand.h"
 
 class POKQTSHARED_EXPORT NetworkClient : public QObject
 {
     Q_OBJECT
     Q_ENUMS(Status)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
-    Q_PROPERTY(QString playerName READ playerName WRITE setPlayerName NOTIFY playerNameChanged)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(bool turn READ turn NOTIFY turnChanged)
 public:
     enum Status {
         NotConnected,
@@ -54,22 +56,28 @@ public:
     };
     explicit NetworkClient(QObject *parent = 0);
     Status status() const;
-    QString playerName() const;
-    void setPlayerName(const QString &playerName);
+    QString name() const;
+    void setName(const QString &name);
+    bool turn() const;
 
     // Non-QML API
     QList<PlayerProperties> players() const;
     int index() const;
     int pot() const;
+    Hand hand() const;
 signals:
     void playersChanged();
+    void handChanged();
     void statusChanged();
-    void playerNameChanged(); // TODO: change this, use name instead of playerName
-    void chatReceived(const QString &playerName, const QString &chat);
+    void nameChanged();
+    void turnChanged();
+    void chatReceived(const QString &name, const QString &chat);
 public slots:
     void connectToHost(const QString &host, int port);
     void disconnectFromHost();
     void sendChat(const QString &chat);
+    void sendBet(int tokenCount);
+    void sendFold();
 private:
     void setPlayers(const QList<PlayerProperties> &players, int index, int pot);
     void setStatus(Status status);
@@ -77,8 +85,10 @@ private:
     Status m_status;
     int m_index;
     QList<PlayerProperties> m_players;
+    Hand m_hand;
     int m_pot;
-    QString m_playerName;
+    QString m_name;
+    bool m_turn;
     QTcpSocket *m_socket;
     int m_nextMessageSize;
 private slots:

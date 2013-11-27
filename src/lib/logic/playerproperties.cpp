@@ -38,7 +38,7 @@
 #include <QtCore/QDataStream>
 
 PlayerProperties::PlayerProperties()
-    : m_tokenCount(0), m_betCount(0)
+    : m_tokenCount(0), m_betCount(0), m_inGame(true)
 {
 }
 
@@ -47,6 +47,7 @@ PlayerProperties & PlayerProperties::operator=(const PlayerProperties &other)
     m_name = other.name();
     m_tokenCount = other.tokenCount();
     m_betCount = other.betCount();
+    m_inGame = other.isInGame();
     return *this;
 }
 
@@ -80,17 +81,28 @@ void PlayerProperties::setBetCount(int betCount)
     m_betCount = betCount;
 }
 
+bool PlayerProperties::isInGame() const
+{
+    return m_inGame;
+}
+
+void PlayerProperties::setInGame(bool inGame)
+{
+    m_inGame = inGame;
+}
+
 bool PlayerProperties::operator==(const PlayerProperties &other)
 {
     return (m_tokenCount == other.tokenCount()
             && m_betCount == other.betCount()
+            && m_inGame == other.isInGame()
             && m_name == other.name());
 }
 
 QDataStream &operator<<(QDataStream &stream, const PlayerProperties &playerProperties)
 {
     stream << playerProperties.name() << (qint32) playerProperties.tokenCount()
-           << (qint32) playerProperties.betCount();
+           << (qint32) playerProperties.betCount() << playerProperties.isInGame();
     return stream;
 }
 
@@ -99,9 +111,11 @@ QDataStream &operator >>(QDataStream &stream, PlayerProperties &playerProperties
     QString name;
     qint32 tokenCount;
     qint32 betCount;
-    stream >> name >> tokenCount >> betCount;
+    bool inGame;
+    stream >> name >> tokenCount >> betCount >> inGame;
     playerProperties.setName(name);
     playerProperties.setTokenCount((int) tokenCount);
     playerProperties.setBetCount((int) betCount);
+    playerProperties.setInGame(inGame);
     return stream;
 }

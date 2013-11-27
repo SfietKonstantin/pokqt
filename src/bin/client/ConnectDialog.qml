@@ -34,10 +34,10 @@ import QtQuick.Controls 1.0
 
 Column {
     id: container
-    signal connectToHost(string ip, int port, string nickname)
+    signal connectToHost(string ip, int port, string name)
 
     TextField {
-        id: nickname
+        id: name
         placeholderText: qsTr("Nickname")
         text: "SK"
     }
@@ -55,9 +55,9 @@ Column {
     }
 
     Button {
-        enabled: nickname.text != "" && ip.text != "" && port.text != ""
+        enabled: name.text != "" && ip.text != "" && port.text != ""
         text: qsTr("Connect")
-        onClicked: container.connectToHost(ip.text, port.text, nickname.text)
+        onClicked: container.connectToHost(ip.text, port.text, name.text)
     }
 
     Button {

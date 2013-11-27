@@ -43,7 +43,7 @@ Item {
 
     NetworkClient {
         id: networkClient
-        onChatReceived: chatPanel.appendChatMessage(playerName, chat)
+        onChatReceived: chatPanel.appendChatMessage(name, chat)
     }
 
     ChatPanel {
@@ -57,7 +57,7 @@ Item {
         visible: networkClient.status == NetworkClient.NotConnected
         anchors.centerIn: parent
         onConnectToHost: {
-            networkClient.playerName = nickname
+            networkClient.name = name
             networkClient.connectToHost(ip, port)
         }
     }
