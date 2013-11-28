@@ -54,22 +54,22 @@ Rectangle {
                 break
             }
 
-            if (rank <= 9) {
-                text += (rank + 1)
+            if (rank <= 8) {
+                text += (rank + 2)
                 return text
             }
 
             switch (rank) {
-            case 10:
+            case 9:
                 text += "J"
                 break
-            case 11:
+            case 10:
                 text += "Q"
                 break
-            case 12:
+            case 11:
                 text += "K"
                 break
-            case 13:
+            case 12:
                 text += "A"
                 break
             default:

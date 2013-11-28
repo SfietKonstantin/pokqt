@@ -45,7 +45,8 @@ enum MessageType {
     CardsType,
     TurnType,
     ActionType,
-    ConfirmEndRoundType
+    AllCardsType,
+    EndRoundType
 };
 
 inline static void sendMessage(QTcpSocket *socket, MessageType messageType)

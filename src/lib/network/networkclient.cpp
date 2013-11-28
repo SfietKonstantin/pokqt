@@ -210,6 +210,11 @@ void NetworkClient::reply(MessageType type, const QByteArray &data)
             }
         }
         break;
+    case EndRoundType: {
+            m_hand.clear();
+            emit handChanged();
+        }
+        break;
     }
 }
 

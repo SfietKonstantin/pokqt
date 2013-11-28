@@ -65,7 +65,7 @@ void NetworkServer::stopServer()
     m_server->close();
 }
 
-void NetworkServer::broadCastPlayers(const QList<PlayerProperties> &players, int pot)
+void NetworkServer::sendPlayerProperties(const QList<PlayerProperties> &players, int pot)
 {
     // Send the data to each socket
     for (int i = 0; i < m_sockets.count(); ++i) {
@@ -76,7 +76,7 @@ void NetworkServer::broadCastPlayers(const QList<PlayerProperties> &players, int
     }
 }
 
-void NetworkServer::refusePlayer(QObject *handle)
+void NetworkServer::sendRefusePlayer(QObject *handle)
 {
     // Handles are sockets
     QTcpSocket *socket = qobject_cast<QTcpSocket *>(handle);
@@ -87,7 +87,7 @@ void NetworkServer::refusePlayer(QObject *handle)
     socket->disconnectFromHost();
 }
 
-void NetworkServer::chat(const QString &name, const QString &message)
+void NetworkServer::sendChat(const QString &name, const QString &message)
 {
     QByteArray data;
     QDataStream stream (&data, QIODevice::WriteOnly);
@@ -100,14 +100,25 @@ void NetworkServer::chat(const QString &name, const QString &message)
     }
 }
 
-void NetworkServer::newRound()
+void NetworkServer::sendNewRound()
 {
     foreach (QTcpSocket *socket, m_sockets) {
         sendMessage(socket, NewRoundType);
     }
 }
 
-void NetworkServer::distributeCards(QObject *handle, const QList<Card> &cards)
+void NetworkServer::sendCardsDistribution(const QList<Card> &cards)
+{
+    QByteArray data;
+    QDataStream stream (&data, QIODevice::WriteOnly);
+    stream << cards;
+
+    foreach (QTcpSocket *socket, m_sockets) {
+        sendMessage(socket, CardsType, data);
+    }
+}
+
+void NetworkServer::sendCardsDistribution(QObject *handle, const QList<Card> &cards)
 {
     // Handles are sockets
     QTcpSocket *socket = qobject_cast<QTcpSocket *>(handle);
@@ -121,17 +132,6 @@ void NetworkServer::distributeCards(QObject *handle, const QList<Card> &cards)
     sendMessage(socket, CardsType, data);
 }
 
-void NetworkServer::distributeCards(const QList<Card> &cards)
-{
-    QByteArray data;
-    QDataStream stream (&data, QIODevice::WriteOnly);
-    stream << cards;
-
-    foreach (QTcpSocket *socket, m_sockets) {
-        sendMessage(socket, CardsType, data);
-    }
-}
-
 void NetworkServer::sendPlayerTurn(QObject *handle)
 {
     // Handles are sockets
@@ -141,6 +141,25 @@ void NetworkServer::sendPlayerTurn(QObject *handle)
     }
 
     sendMessage(socket, TurnType);
+}
+
+void NetworkServer::sendEndRound()
+{
+    foreach (QTcpSocket *socket, m_sockets) {
+        sendMessage(socket, EndRoundType);
+    }
+}
+
+void NetworkServer::sendAllCards(const QList<Hand> &hands)
+{
+    // Send all hands of people who didn't fold
+    QByteArray data;
+    QDataStream stream (&data, QIODevice::WriteOnly);
+    stream << hands;
+
+    foreach (QTcpSocket *socket, m_sockets) {
+        sendMessage(socket, AllCardsType, data);
+    }
 }
 
 void NetworkServer::reply(QTcpSocket *socket, MessageType type, const QByteArray &data)
@@ -165,6 +184,10 @@ void NetworkServer::reply(QTcpSocket *socket, MessageType type, const QByteArray
             emit actionReceived(socket, tokenCount);
             sendMessage(socket, ActionType);
         }
+        break;
+    case EndRoundType: // Do nothing
+        break;
+    case AllCardsType: // Do nothing
         break;
     }
 }

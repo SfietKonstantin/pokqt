@@ -46,15 +46,35 @@ Hand & Hand::operator=(const Hand &other)
     return *this;
 }
 
-bool Hand::operator==(const Hand &other)
+bool Hand::operator==(const Hand &other) const
 {
     return m_cards == other.cards();
 }
 
-bool Hand::operator<(const Hand &other)
+bool Hand::operator<(const Hand &other) const
 {
     // Implement poker rules here
-    return true;
+
+    // Basic rule: we compare the biggest card
+    if (isEmpty()) {
+        return false;
+    }
+
+    if (other.isEmpty()) {
+        return true;
+    }
+
+    QList<Card> myCards = m_cards;
+    QList<Card> otherCards = other.cards();
+    std::sort(myCards.begin(), myCards.end());
+    std::sort(otherCards.begin(), otherCards.end());
+
+    return myCards.last() < otherCards.last();
+}
+
+bool Hand::isEmpty() const
+{
+    return m_cards.isEmpty();
 }
 
 QList<Card> Hand::cards() const
@@ -67,7 +87,26 @@ void Hand::addCard(const Card &card)
     m_cards.append(card);
 }
 
+void Hand::addCards(const QList<Card> &cards)
+{
+    m_cards.append(cards);
+}
+
 void Hand::clear()
 {
     m_cards.clear();
+}
+
+QDataStream &operator <<(QDataStream &stream, const Hand &hand)
+{
+    stream << hand.cards();
+    return stream;
+}
+
+QDataStream &operator >>(QDataStream &stream, Hand &hand)
+{
+    QList<Card> cards;
+    stream >> cards;
+    hand.addCards(cards);
+    return stream;
 }

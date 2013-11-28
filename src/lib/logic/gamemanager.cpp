@@ -165,6 +165,7 @@ void GameManager::prepareRound()
         QList<Card> cards;
         cards.append(m_deck.draw());
         cards.append(m_deck.draw());
+        m_hands[handle].addCards(cards);
         emit cardsDistributed(handle, cards);
     }
 
@@ -209,11 +210,10 @@ void GameManager::nextTurn()
         }
     }
 
+    // Only one player left: he / she wins
     if (inGameCount == 1) {
-
+        cleanUpRound();
     }
-
-    // TODO
 
     // Compute best player
     foreach (QObject *handle, m_handles) {
@@ -224,7 +224,18 @@ void GameManager::nextTurn()
         }
     }
 
-    if (m_maxBetHandle == m_handles[m_currentPlayer]) {
+    // We should reveal newer cards if all players have the same amount bet
+    // and if we reached the first player who have done the bet
+
+    bool equalBetReached = true;
+    int maxBet = m_playerProperties.value(m_handles[m_currentPlayer]).betCount();
+    foreach (const PlayerProperties &player, m_playerProperties) {
+        if (player.isInGame() && player.betCount() != maxBet) {
+            equalBetReached = false;
+        }
+    }
+
+    if (m_maxBetHandle == m_handles[m_currentPlayer] && equalBetReached) {
         qDebug() << "Player with max bet reached";
         switch (m_middleCardsState) {
         case Initial:
@@ -240,7 +251,7 @@ void GameManager::nextTurn()
             m_middleCardsState = River;
             break;
         case River:
-            qDebug() << "TODO here !";
+            manageDraw();
             break;
         }
     }
@@ -261,7 +272,60 @@ void GameManager::nextTurn()
 
 void GameManager::cleanUpRound()
 {
+    // Give pot to winner
+    PlayerProperties &player = m_playerProperties[m_maxBetHandle];
+    player.setTokenCount(player.tokenCount() + m_pot);
 
+    m_pot = 0;
+
+    for (QMap<QObject *, PlayerProperties>::iterator i = m_playerProperties.begin();
+         i != m_playerProperties.end(); ++i) {
+        i.value().setBetCount(0);
+    }
+
+    // Cleanup hands
+    m_hands.clear();
+    emit endRound();
+
+    performBroadcastPlayers();
+
+    // Restart a new round
+    prepareRound();
+}
+
+void GameManager::manageDraw()
+{
+    // First, we should send the cards everybody had
+    // (except those who hold) to all the clients
+    QList<Hand> hands;
+    foreach (QObject *handle, m_handles) {
+        const PlayerProperties &player = m_playerProperties.value(handle);
+        if (player.isInGame()) {
+            hands.append(m_hands.value(handle));
+        } else {
+            hands.append(Hand());
+        }
+    }
+
+    emit allCardsSent(hands);
+
+    // Let's compare all the hands
+    QMap<Hand, QObject *> handsHandle;
+
+    // We use a QMap that automatically sorts by key,
+    // so the last element of handsHandle is the winner
+    foreach (QObject *handle, m_handles) {
+        const Hand &hand = m_hands.value(handle);
+        handsHandle.insert(hand, handle);
+    }
+
+    QObject *winner = handsHandle.value(handsHandle.keys().last());
+
+    // We cheat: we pass winner as m_maxBetHandle, so cleanUpRound
+    // will give the tokens to the winner, and not the the one who has
+    // the highest bet
+    m_maxBetHandle = winner;
+    cleanUpRound();
 }
 
 void GameManager::distributeMiddleCards(int count)
@@ -269,6 +333,10 @@ void GameManager::distributeMiddleCards(int count)
     QList<Card> cards;
     for (int i = 0; i < count; i++) {
         cards.append(m_deck.draw());
+    }
+
+    foreach (QObject *handle, m_handles) {
+        m_hands[handle].addCards(cards);
     }
 
     emit cardsDistributed(cards);

@@ -49,8 +49,8 @@ public:
     explicit Card(Suit suit, int rank);
     Card(const Card &other);
     Card & operator=(const Card &other);
-    bool operator==(const Card &other);
-    bool operator<(const Card &other);
+    bool operator==(const Card &other) const;
+    bool operator<(const Card &other) const;
     bool isValid() const;
     Suit suit() const;
     void setSuit(Suit suit);

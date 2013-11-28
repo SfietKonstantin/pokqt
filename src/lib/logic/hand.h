@@ -41,13 +41,18 @@ public:
     explicit Hand();
     Hand(const Hand &other);
     Hand & operator=(const Hand &other);
-    bool operator==(const Hand &other);
-    bool operator<(const Hand &other);
+    bool operator==(const Hand &other) const;
+    bool operator<(const Hand &other) const;
+    bool isEmpty() const;
     QList<Card> cards() const;
     void addCard(const Card &card);
+    void addCards(const QList<Card> &cards);
     void clear();
 private:
     QList<Card> m_cards;
 };
+
+QDataStream &operator <<(QDataStream &stream, const Hand &hand);
+QDataStream &operator >>(QDataStream &stream, Hand &hand);
 
 #endif // HAND_H

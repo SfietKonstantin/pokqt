@@ -96,13 +96,16 @@ Item {
 
         Button {
             text: qsTr("Raise")
+            iconSource: "assets/raise.png"
             onClicked: betManager.raise(betSpin.value)
         }
         Button {
+            iconSource: betManager.check ? "assets/check.png" : "assets/call.png"
             text: betManager.check ? qsTr("Check") : qsTr("Call")
             onClicked: betManager.call()
         }
         Button {
+            iconSource: "assets/fold.png"
             text: qsTr("Fold")
             onClicked: betManager.fold()
         }

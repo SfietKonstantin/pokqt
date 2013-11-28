@@ -76,12 +76,12 @@ Card & Card::operator=(const Card &other)
     return *this;
 }
 
-bool Card::operator==(const Card &other)
+bool Card::operator==(const Card &other) const
 {
     return (m_suit == other.suit() && m_rank == other.rank());
 }
 
-bool Card::operator<(const Card &other)
+bool Card::operator<(const Card &other) const
 {
     if (m_rank != other.rank()) {
         return m_rank < other.rank();

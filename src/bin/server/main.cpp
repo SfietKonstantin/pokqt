@@ -45,8 +45,9 @@ int main(int argc, char **argv)
     GameManager gameManager;
 
     // Connections between dialog and server
-    QObject::connect(&server, &NetworkServer::displayMessage, &dialog, &ServerDialog::displayMessage);
-    QObject::connect(&dialog, OSIGNAL(ServerDialog, start,int),
+    QObject::connect(&server, &NetworkServer::displayMessage,
+                     &dialog, &ServerDialog::displayMessage);
+    QObject::connect(&dialog, OSIGNAL(ServerDialog, start, int),
                      &server, &NetworkServer::startServer);
     QObject::connect(&dialog, &ServerDialog::stop, &server, &NetworkServer::stopServer);
 
@@ -60,18 +61,21 @@ int main(int argc, char **argv)
     QObject::connect(&server, &NetworkServer::playerRemoved,
                      &gameManager, &GameManager::removePlayer);
     QObject::connect(&gameManager, &GameManager::playersBroadcasted,
-                     &server, &NetworkServer::broadCastPlayers);
+                     &server, &NetworkServer::sendPlayerProperties);
     QObject::connect(&server, &NetworkServer::chatReceived, &gameManager, &GameManager::chat);
-    QObject::connect(&gameManager, &GameManager::chatSent, &server, &NetworkServer::chat);
-    QObject::connect(&gameManager, &GameManager::newRound, &server, &NetworkServer::newRound);
-    QObject::connect(&gameManager, OSIGNAL2(GameManager, cardsDistributed, QObject *, const QList<Card> &),
-                     &server, OSLOT2(NetworkServer, distributeCards, QObject *, const QList<Card> &));
+    QObject::connect(&gameManager, &GameManager::chatSent, &server, &NetworkServer::sendChat);
+    QObject::connect(&gameManager, &GameManager::newRound, &server, &NetworkServer::sendNewRound);
+    QObject::connect(&gameManager, OSIGNAL2(GameManager, cardsDistributed,QObject *, const QList<Card> &),
+                     &server, OSLOT2(NetworkServer, sendCardsDistribution,QObject *, const QList<Card> &));
     QObject::connect(&gameManager, OSIGNAL(GameManager, cardsDistributed, const QList<Card> &),
-                     &server, OSLOT(NetworkServer, distributeCards, const QList<Card> &));
+                     &server, OSLOT(NetworkServer, sendCardsDistribution, const QList<Card> &));
     QObject::connect(&gameManager, &GameManager::playerTurnSelected,
                      &server, &NetworkServer::sendPlayerTurn);
     QObject::connect(&server, &NetworkServer::actionReceived,
                      &gameManager, &GameManager::performAction);
+    QObject::connect(&gameManager, &GameManager::endRound, &server, &NetworkServer::sendEndRound);
+    QObject::connect(&gameManager, &GameManager::allCardsSent,
+                     &server, &NetworkServer::sendAllCards);
 
     dialog.show();
 

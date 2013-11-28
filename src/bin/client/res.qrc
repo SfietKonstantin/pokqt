@@ -11,5 +11,9 @@
         <file>assets/bet.png</file>
         <file>assets/player.png</file>
         <file>Card.qml</file>
+        <file>assets/call.png</file>
+        <file>assets/check.png</file>
+        <file>assets/fold.png</file>
+        <file>assets/raise.png</file>
     </qresource>
 </RCC>

@@ -36,6 +36,7 @@
 #include <QtCore/QMap>
 #include "playerproperties.h"
 #include "deck.h"
+#include "hand.h"
 
 class BetManager;
 class GameManager : public QObject
@@ -67,6 +68,8 @@ signals:
     void cardsDistributed(const QList<Card> &card);
     void cardsDistributed(QObject *handle, const QList<Card> &card);
     void playerTurnSelected(QObject *handle);
+    void endRound();
+    void allCardsSent(const QList<Hand> &hands);
 private:
     enum MiddleCardsState {
         Initial,
@@ -80,6 +83,7 @@ private:
     void prepareRound();
     void nextTurn();
     void cleanUpRound();
+    void manageDraw();
     void distributeMiddleCards(int count);
     GameStatus m_status;
     MiddleCardsState m_middleCardsState;
@@ -87,6 +91,7 @@ private:
     int m_currentPlayer;
     QList<QObject *> m_handles;
     QMap<QObject *, PlayerProperties> m_playerProperties;
+    QMap<QObject *, Hand> m_hands;
     Deck m_deck;
     int m_pot;
     BetManager *m_betManager;
