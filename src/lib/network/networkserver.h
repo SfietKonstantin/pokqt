@@ -40,10 +40,30 @@
 
 class QTcpSocket;
 class QTcpServer;
+
+/**
+ * @brief Server class
+ *
+ * This class is responsible of managing
+ * network connections, like client connections
+ * and disconnections. It wraps a QTcpServer, that
+ * performs all the operations.
+ *
+ * The NetworkServer class also manages message
+ * reception and transmission to clients. However,
+ * it do not manage the game logic. The game logic
+ * is managed by GameManager. Both classes provides
+ * signals and slots that fits together to build a
+ * server.
+ */
 class POKQTSHARED_EXPORT NetworkServer: public QObject
 {
     Q_OBJECT
 public:
+    /**
+     * @brief Default constructor
+     * @param parent parent object.
+     */
     explicit NetworkServer(QObject *parent = 0);
 signals:
     void displayMessage(const QString &type, const QString &message);
@@ -52,7 +72,14 @@ signals:
     void chatReceived(QTcpSocket *socket, const QString &message);
     void actionReceived(QTcpSocket *socket, int tokenCount);
 public slots:
+    /**
+     * @brief Start the server
+     * @param port port to use.
+     */
     void startServer(int port);
+    /**
+     * @brief Stops the server
+     */
     void stopServer();
 
     void broadCastPlayers(const QList<PlayerProperties> &players, int pot);
