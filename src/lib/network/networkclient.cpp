@@ -29,11 +29,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file networkclient.cpp
+ * @short Implementation of NetworkClient
+ */
+
 #include "networkclient.h"
 #include "osignal.h"
 #include <QtCore/QDataStream>
 #include <QtNetwork/QHostAddress>
 #include "logic/card.h"
+
+/// @todo TODO: separate logic and network for this class
 
 NetworkClient::NetworkClient(QObject *parent) :
     QObject(parent), m_status(NotConnected), m_index(-1), m_pot(0), m_turn(false)
@@ -41,7 +48,7 @@ NetworkClient::NetworkClient(QObject *parent) :
 {
     m_socket = new QTcpSocket(this);
     connect(m_socket, &QTcpSocket::connected, this, &NetworkClient::slotConnected);
-    connect(m_socket, OSIGNAL(QTcpSocket, error, QAbstractSocket::SocketError),
+    connect(m_socket, OSIGNAL1(QTcpSocket, error, QAbstractSocket::SocketError),
             this, &NetworkClient::slotError);
     connect(m_socket, &QTcpSocket::readyRead, this, &NetworkClient::slotReadyRead);
 }
@@ -103,7 +110,7 @@ void NetworkClient::disconnectFromHost()
 {
     setStatus(NotConnected);
     m_socket->disconnectFromHost();
-    setPlayers(QList<PlayerProperties>(), -1, 0);
+    setGameProperties(QList<PlayerProperties>(), -1, 0);
     m_index = -1;
     m_players.clear();
 }
@@ -134,7 +141,7 @@ void NetworkClient::setStatus(Status status)
     }
 }
 
-void NetworkClient::setPlayers(const QList<PlayerProperties> &players, int index, int pot)
+void NetworkClient::setGameProperties(const QList<PlayerProperties> &players, int index, int pot)
 {
     if (m_index != index || m_pot != pot || m_players != players) {
         m_players = players;
@@ -169,7 +176,7 @@ void NetworkClient::reply(MessageType type, const QByteArray &data)
             qDebug() << "Your index" << index;
             qDebug() << "Current pot" << pot;
 
-            setPlayers(players, index, pot);
+            setGameProperties(players, index, pot);
         }
         break;
     case ChatType: {

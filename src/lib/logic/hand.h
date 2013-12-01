@@ -32,6 +32,11 @@
 #ifndef HAND_H
 #define HAND_H
 
+/**
+ * @file hand.h
+ * @short Definition of Deck
+ */
+
 #include "pokqt_global.h"
 #include <QtCore/QList>
 #include "card.h"
@@ -83,6 +88,16 @@ public:
      * @return if the two Hand are equal.
      */
     bool operator==(const Hand &other) const;
+    /**
+     * @brief Inequality
+     * @param other other Hand to compare with.
+     *
+     * This comparison uses poker rules (with an exception:
+     * two hands are equal iff they have the same cards,
+     * so there is an absolute order in hands)
+     *
+     * @return if this hand is less powerful than the other.
+     */
     bool operator<(const Hand &other) const;
     /**
      * @brief Get if the hand is empty
@@ -108,24 +123,116 @@ public:
      * @brief Clear the hand
      */
     void clear();
+    /**
+     * @brief Extract a straight flush
+     * @param cards a list of cards.
+     * @return the most powerful straight flush from the inputted cards.
+     */
     static QList<Card> straightFlush(const QList<Card> &cards);
+    /**
+     * @brief Extract a four
+     * @param cards a list of cards.
+     * @return the most powerful four from the inputted cards.
+     */
     static QList<Card> four(const QList<Card> &cards);
+    /**
+     * @brief Extract a full house
+     * @param cards a list of cards.
+     * @return the most powerful full house from the inputted cards.
+     */
     static QList<Card> fullHouse(const QList<Card> &cards);
+    /**
+     * @brief Extract a flush
+     * @param cards a list of cards.
+     * @return the most powerful flush from the inputted cards.
+     */
     static QList<Card> flush(const QList<Card> &cards);
+    /**
+     * @brief Extract a straight
+     * @param cards a list of cards.
+     * @return the most powerful straight from the inputted cards.
+     */
     static QList<Card> straight(const QList<Card> &cards);
+    /**
+     * @brief Extract a three
+     * @param cards a list of cards.
+     * @return the most powerful three from the inputted cards.
+     */
     static QList<Card> three(const QList<Card> &cards);
+    /**
+     * @brief Extract a two pairs
+     * @param cards a list of cards.
+     * @return the most powerful two pairs from the inputted cards.
+     */
     static QList<Card> twoPairs(const QList<Card> &cards);
+    /**
+     * @brief Extract a pair
+     * @param cards a list of cards.
+     * @return the most powerful pair from the inputted cards.
+     */
     static QList<Card> pair(const QList<Card> &cards);
 private:
+    /**
+     * @internal
+     * @brief Extract a n-cards
+     * @param cards a list of cards.
+     * @param n a number of identical cards to extract.
+     * @return the most powerful n-cards.
+     */
     static QList<Card> nCards(const QList<Card> &cards, int n);
+    /**
+     * @internal
+     * @brief Compare high cards
+     *
+     * This method implements a sort of operator< on a list of cards,
+     * based on the biggest card (lexicographical order). It compares
+     * both rank and suits.
+     *
+     * Warning: you can compare two lists with a different number of cards,
+     * but it will only compare n cards (n = min(nb cards 1, nb cards 2).
+     * And if the two compared sets are equal, this function returns true.
+     * If not, the number of cards is compared: if nb cards 2 > nb cards 1,
+     * this returns false.
+     *
+     * @param cards1 first list of cards.
+     * @param cards2 second list of cards
+     * @return if the first list of cards is less powerful than the second
+     */
     static bool highCardLesser(const QList<Card> &cards1, const QList<Card> cards2);
+    /**
+     * @internal
+     * @brief Helper method used to compare combos
+     * @param combo1 a combo returned by the combo extractors.
+     * @param combo2 a combo returned by the combo extractors.
+     * @param allCards1 all cards for the first player.
+     * @param allCards2 all cards for the second player.
+     * @param equal a pointer to check if the players are equal.
+     * @return if the first player is less powerful or have equal power compared to the second
+     * player.
+     */
     static bool compareLesser(const QList<Card> &combo1, const QList<Card> &combo2,
                               const QList<Card> &allCards1, const QList<Card> &allCards2,
                               bool *equal = 0);
+    /**
+     * @internal
+     * @brief Cards
+     */
     QList<Card> m_cards;
 };
 
+/**
+ * @brief Serialize a Hand in a QDataStream
+ * @param stream stream used to serialize.
+ * @param hand object to serialize.
+ * @return a reference to the stream with the serialized object.
+ */
 QDataStream &operator <<(QDataStream &stream, const Hand &hand);
+/**
+ * @brief Deserialize a Hand from a QDataStream
+ * @param stream stream used to deserialize.
+ * @param hand reference to the object that is used to store deserialized data.
+ * @return a reference to the stream without the serialized object.
+ */
 QDataStream &operator >>(QDataStream &stream, Hand &hand);
 
 #endif // HAND_H

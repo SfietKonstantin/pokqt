@@ -45,23 +45,69 @@
  *
  * @param CLASS class name.
  * @param NAME method name.
- * @param ARG first argument type.
  */
-#define OSIGNAL(CLASS, NAME, ARG) \
-    static_cast<void (CLASS::*)(ARG)>(&CLASS::NAME)
-
 #define OSIGNAL0(CLASS, NAME) \
     static_cast<void (CLASS::*)()>(&CLASS::NAME)
-
+/**
+ * @short Helper macro for Qt connection system
+ *
+ * This macro generates casts an overloaded method
+ * to a give signature.
+ *
+ * @param CLASS class name.
+ * @param NAME method name.
+ * @param ARG1 first argument type.
+ */
+#define OSIGNAL1(CLASS, NAME, ARG1) \
+    static_cast<void (CLASS::*)(ARG1)>(&CLASS::NAME)
+/**
+ * @short Helper macro for Qt connection system
+ *
+ * This macro generates casts an overloaded method
+ * to a give signature.
+ *
+ * @param CLASS class name.
+ * @param NAME method name.
+ * @param ARG1 first argument type.
+ * @param ARG2 second argument type.
+ */
 #define OSIGNAL2(CLASS, NAME, ARG1, ARG2) \
     static_cast<void (CLASS::*)(ARG1, ARG2)>(&CLASS::NAME)
 
-#define OSLOT(CLASS, NAME, ARG) \
-    static_cast<void (CLASS::*)(ARG)>(&CLASS::NAME)
-
+/**
+ * @short Helper macro for Qt connection system
+ *
+ * This macro generates casts an overloaded method
+ * to a give signature.
+ *
+ * @param CLASS class name.
+ * @param NAME method name.
+ */
 #define OSLOT0(CLASS, NAME) \
     static_cast<void (CLASS::*)()>(&CLASS::NAME)
-
+/**
+ * @short Helper macro for Qt connection system
+ *
+ * This macro generates casts an overloaded method
+ * to a give signature.
+ *
+ * @param CLASS class name.
+ * @param NAME method name.
+ * @param ARG1 first argument type.
+ */
+#define OSLOT1(CLASS, NAME, ARG1) \
+    static_cast<void (CLASS::*)(ARG1)>(&CLASS::NAME)
+/**
+ * @short Helper macro for Qt connection system
+ *
+ * This macro generates casts an overloaded method
+ * to a give signature.
+ *
+ * @param CLASS class name.
+ * @param NAME method name.
+ * @param ARG1 first argument type.
+ * @param ARG2 second argument type.
+ */
 #define OSLOT2(CLASS, NAME, ARG1, ARG2) \
     static_cast<void (CLASS::*)(ARG1, ARG2)>(&CLASS::NAME)
 

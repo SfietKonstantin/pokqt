@@ -3,7 +3,8 @@ TARGET = pokqt-client
 
 QT = core gui network quick
 INCLUDEPATH+=../../lib/
-LIBS+=-L../../lib/ -lpokqt
+unix: LIBS+=-L../../lib/ -lpokqt
+win32: LIBS+=-L../../lib/release -lpokqt
 
 HEADERS += \
     playersmodel.h \

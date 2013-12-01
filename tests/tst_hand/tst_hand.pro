@@ -1,5 +1,7 @@
 QT += testlib
 
+win32:DEFINES += POKQT_LIBRARY
+
 INCLUDEPATH=../../src/lib/
 
 HEADERS += ../../src/lib/pokqt_global.h \

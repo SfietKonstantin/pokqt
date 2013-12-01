@@ -36,6 +36,8 @@
  * @file playerproperties.h
  * @short Definition of PlayerProperties
  */
+
+#include "pokqt_global.h"
 #include <QtCore/QString>
 
 /**
@@ -53,7 +55,7 @@
  * they are stored server-side only (to make sure that
  * there is no way to cheat).
  */
-class PlayerProperties
+class POKQTSHARED_EXPORT PlayerProperties
 {
 public:
     /**
@@ -83,7 +85,7 @@ public:
     int tokenCount() const;
     /**
      * @brief Set player's token count
-     * @param tokens player's token count to set.
+     * @param tokenCount player's token count to set.
      */
     void setTokenCount(int tokenCount);
     /**

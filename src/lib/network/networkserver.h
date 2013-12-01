@@ -48,7 +48,7 @@ class QTcpSocket;
 class QTcpServer;
 
 /**
- * @brief Server class
+ * @brief %Server class
  *
  * This class is responsible of managing
  * network connections, like client connections

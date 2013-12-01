@@ -29,6 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file server/main.cpp
+ * @short Main server file
+ */
+
 #include <QtWidgets/QApplication>
 #include <network/networkserver.h>
 #include <logic/gamemanager.h>
@@ -36,48 +41,112 @@
 #include "serverdialog.h"
 #include <osignal.h>
 
+/**
+ * @brief Namespace for server related classes
+ */
+namespace Server
+{
+
+/**
+ * @brief Main object of the server
+ */
+class ServerObject: public QObject
+{
+    Q_OBJECT
+public:
+    /**
+     * @brief Default constructor
+     * @param parent parent object.
+     */
+    explicit ServerObject(QObject *parent = 0);
+    /**
+     * @brief Destructor
+     */
+    virtual ~ServerObject();
+    /**
+     * @brief Show the dialog
+     */
+    void show();
+private:
+    /**
+     * @internal
+     * @brief Server dialog
+     */
+    ServerDialog *m_dialog;
+    /**
+     * @internal
+     * @brief Server (network communications)
+     */
+    NetworkServer *m_server;
+    /**
+     * @internal
+     * @brief Server (game manager)
+     */
+    GameManager *m_gameManager;
+};
+
+ServerObject::ServerObject(QObject *parent)
+    : QObject(parent), m_dialog(new ServerDialog), m_server(new NetworkServer(this))
+    , m_gameManager(new GameManager(this))
+{
+    // Connections between dialog and server
+    connect(m_server, &NetworkServer::info, m_dialog, &ServerDialog::displayMessage);
+    connect(m_dialog, OSIGNAL1(ServerDialog, started, int), m_server, &NetworkServer::startServer);
+    connect(m_dialog, &ServerDialog::stopped, m_server, &NetworkServer::stopServer);
+
+    // Connections between dialog and game manager
+    connect(m_dialog, OSIGNAL0(ServerDialog, started), m_gameManager, &GameManager::start);
+    connect(m_dialog, &ServerDialog::gameStarted, m_gameManager, &GameManager::startGame);
+    connect(m_dialog, &ServerDialog::stopped, m_gameManager, &GameManager::stop);
+
+    // Connections between server and game manager
+    connect(m_server, &NetworkServer::playerAdded, m_gameManager, &GameManager::addPlayer);
+    connect(m_server, &NetworkServer::playerRemoved, m_gameManager, &GameManager::removePlayer);
+    connect(m_gameManager, &GameManager::gamePropertiesBroadcasted,
+            m_server, &NetworkServer::sendPlayerProperties);
+    connect(m_server, &NetworkServer::chatReceived, m_gameManager, &GameManager::performChat);
+    connect(m_gameManager, &GameManager::chatBroadcasted, m_server, &NetworkServer::sendChat);
+    connect(m_gameManager, &GameManager::newRoundBroadcasted,
+            m_server, &NetworkServer::sendNewRound);
+    connect(m_gameManager, OSIGNAL2(GameManager, cardsDistributed,QObject *, const QList<Card> &),
+            m_server, OSLOT2(NetworkServer, sendCardsDistribution,QObject *, const QList<Card> &));
+    connect(m_gameManager, OSIGNAL1(GameManager, cardsDistributed, const QList<Card> &),
+            m_server, OSLOT1(NetworkServer, sendCardsDistribution, const QList<Card> &));
+    connect(m_gameManager, &GameManager::playerTurnSelected,
+            m_server, &NetworkServer::sendPlayerTurn);
+    connect(m_server, &NetworkServer::actionReceived, m_gameManager, &GameManager::performAction);
+    connect(m_gameManager, &GameManager::endRoundBroadcasted,
+            m_server, &NetworkServer::sendEndRound);
+    connect(m_gameManager, &GameManager::allCardsBroadcasted,
+            m_server, &NetworkServer::sendAllHands);
+}
+
+ServerObject::~ServerObject()
+{
+    m_dialog->deleteLater();
+}
+
+void ServerObject::show()
+{
+    m_dialog->show();
+}
+
+}
+
+/**
+ * @brief Server main
+ * @param argc argc.
+ * @param argv argv.
+ * @return exit code.
+ */
 int main(int argc, char **argv)
 {
     QApplication app (argc, argv);
 
-    ServerDialog dialog;
-    NetworkServer server;
-    GameManager gameManager;
-
-    // Connections between dialog and server
-    QObject::connect(&server, &NetworkServer::info,
-                     &dialog, &ServerDialog::displayMessage);
-    QObject::connect(&dialog, OSIGNAL(ServerDialog, start, int),
-                     &server, &NetworkServer::startServer);
-    QObject::connect(&dialog, &ServerDialog::stop, &server, &NetworkServer::stopServer);
-
-    // Connections between dialog and game manager
-    QObject::connect(&dialog, OSIGNAL0(ServerDialog, start), &gameManager, &GameManager::start);
-    QObject::connect(&dialog, &ServerDialog::startGame, &gameManager, &GameManager::startGame);
-    QObject::connect(&dialog, &ServerDialog::stop, &gameManager, &GameManager::stop);
-
-    // Connections between server and game manager
-    QObject::connect(&server, &NetworkServer::playerAdded, &gameManager, &GameManager::addPlayer);
-    QObject::connect(&server, &NetworkServer::playerRemoved,
-                     &gameManager, &GameManager::removePlayer);
-    QObject::connect(&gameManager, &GameManager::playersBroadcasted,
-                     &server, &NetworkServer::sendPlayerProperties);
-    QObject::connect(&server, &NetworkServer::chatReceived, &gameManager, &GameManager::chat);
-    QObject::connect(&gameManager, &GameManager::chatSent, &server, &NetworkServer::sendChat);
-    QObject::connect(&gameManager, &GameManager::newRound, &server, &NetworkServer::sendNewRound);
-    QObject::connect(&gameManager, OSIGNAL2(GameManager, cardsDistributed,QObject *, const QList<Card> &),
-                     &server, OSLOT2(NetworkServer, sendCardsDistribution,QObject *, const QList<Card> &));
-    QObject::connect(&gameManager, OSIGNAL(GameManager, cardsDistributed, const QList<Card> &),
-                     &server, OSLOT(NetworkServer, sendCardsDistribution, const QList<Card> &));
-    QObject::connect(&gameManager, &GameManager::playerTurnSelected,
-                     &server, &NetworkServer::sendPlayerTurn);
-    QObject::connect(&server, &NetworkServer::actionReceived,
-                     &gameManager, &GameManager::performAction);
-    QObject::connect(&gameManager, &GameManager::endRound, &server, &NetworkServer::sendEndRound);
-    QObject::connect(&gameManager, &GameManager::allCardsSent,
-                     &server, &NetworkServer::sendAllHands);
-
-    dialog.show();
+    Server::ServerObject server;
+    server.show();
 
     return app.exec();
 }
+
+#include "main.moc"

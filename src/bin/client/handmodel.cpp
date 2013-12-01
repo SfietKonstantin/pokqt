@@ -29,8 +29,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file handmodel.cpp
+ * @short Implementation of Client::HandModel
+ */
+
 #include "handmodel.h"
 
+namespace Client
+{
+
+/**
+ * @internal
+ * @brief Get the type of card based on index
+ * @param index index of the card.
+ * @return type of the card.
+ */
 inline static QVariant getCardType(int index)
 {
     if (index < 0 || index >= 7) {
@@ -139,4 +153,6 @@ void HandModel::slotHandChanged()
 
     emit countChanged();
     endInsertRows();
+}
+
 }

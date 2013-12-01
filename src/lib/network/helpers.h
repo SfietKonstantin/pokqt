@@ -32,23 +32,69 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+/**
+ * @file helpers.h
+ * @short Helper enumerations and functions
+ */
+
 #include <QtCore/QDebug>
 #include <QtCore/QDataStream>
 #include <QtNetwork/QTcpSocket>
 
-// Todo: rename to globals or something like that
+/// @todo TODO: rename to globals or something like that
 
+/**
+ * @brief Enumeration describing the server-client message types
+ */
 enum MessageType {
+    /**
+     * @short Player information
+     *
+     * - client -> server: client registering name.
+     * - server -> client: game properties broadcast.
+     */
     PlayerType,
+    /**
+     * @short Chat
+     *
+     * - client -> server: requires server to broadcast chat message.
+     * - server -> client: server broadcasting chat message.
+     */
     ChatType,
+    /**
+     * @short New round starting
+     */
     NewRoundType,
+    /**
+     * @short Cards being distributed
+     */
     CardsType,
+    /**
+     * @short Changing the player's turn
+     */
     TurnType,
+    /**
+     * @short Client sending an action
+     */
     ActionType,
+    /**
+     * @short At the end of a round all cards being broadcasted
+     */
     AllCardsType,
+    /**
+     * @short A round ends
+     */
     EndRoundType
 };
 
+/**
+ * @brief Send a message through a socket
+ *
+ * This function sends no additional information.
+ *
+ * @param socket socket to use.
+ * @param messageType message type.
+ */
 inline static void sendMessage(QTcpSocket *socket, MessageType messageType)
 {
     QByteArray data;
@@ -66,6 +112,13 @@ inline static void sendMessage(QTcpSocket *socket, MessageType messageType)
     socket->write(data);
 }
 
+/**
+ * @brief Send a message through a socket
+ *
+ * @param socket socket to use.
+ * @param messageType message type.
+ * @param message message to send.
+ */
 inline static void sendMessage(QTcpSocket *socket, MessageType messageType,
                                const QByteArray &message)
 {
@@ -85,6 +138,13 @@ inline static void sendMessage(QTcpSocket *socket, MessageType messageType,
     socket->write(data);
 }
 
+/**
+ * @brief Send a string message through a socket
+ *
+ * @param socket socket to use.
+ * @param messageType message type.
+ * @param message message to send.
+ */
 inline static void sendMessageString(QTcpSocket *socket, MessageType messageType,
                                      const QString &message)
 {

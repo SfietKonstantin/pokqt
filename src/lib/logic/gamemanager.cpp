@@ -29,19 +29,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file gamemanager.cpp
+ * @short Implementation of GameManager
+ */
+
 #include "gamemanager.h"
 #include <QtCore/QDebug>
 #include <QtCore/QDateTime>
 #include "betmanager.h"
 
-
+/**
+ * @internal
+ * @brief INITIAL_TOKEN_COUNT
+ *
+ * Constant representing the initial token count to give to a player.
+ */
 static const int INITIAL_TOKEN_COUNT = 1000;
+/**
+ * @internal
+ * @brief SMALL_BLIND
+ *
+ * Constant representing the amount to pay for the small blind.
+ */
 static const int SMALL_BLIND = 10;
+/**
+ * @internal
+ * @brief BIG_BLIND
+ *
+ * Constant representing the amount to pay for the big blind.
+ */
 static const int BIG_BLIND = 20;
-/// @todo TODO: We shouldn't put blinds and token count as constant.
-
+/**
+ * @todo TODO: We shouldn't put blinds and token count as constant.
+ * @todo TODO: Send some messages to describe the game (like: \<player\> raise for 50 tokens)
+ * @bug BUG: right now we have a bug when changing round. It can lead to a deadlock, as no
+ * player is selected to play
+ */
 GameManager::GameManager(QObject *parent) :
-    QObject(parent), m_status(Invalid), m_middleCardsState(Initial), m_initialPlayer(-1)
+    QObject(parent), m_status(Invalid), m_distributedCardsStatus(Initial), m_initialPlayer(-1)
     , m_currentPlayer(-1), m_pot(0) , m_betManager(new BetManager(this)), m_maxBetHandle(0)
 {
 }
@@ -54,7 +80,7 @@ void GameManager::start()
 void GameManager::startGame()
 {
     qsrand(QDateTime::currentMSecsSinceEpoch());
-    m_status = PreparingGame;
+    m_status = Gaming;
     m_initialPlayer = qrand() % m_handles.count();
     prepareRound();
 }
@@ -83,7 +109,7 @@ void GameManager::addPlayer(QObject *handle, const QString &name)
     properties.setTokenCount(INITIAL_TOKEN_COUNT);
     m_playerProperties.insert(handle, properties);
 
-    performBroadcastPlayers();
+    performGamePropertiesBroadcast();
 }
 
 void GameManager::removePlayer(QObject *handle)
@@ -96,15 +122,15 @@ void GameManager::removePlayer(QObject *handle)
     m_handles.removeAll(handle);
     m_playerProperties.remove(handle);
 
-    performBroadcastPlayers();
+    performGamePropertiesBroadcast();
 }
 
-void GameManager::chat(QObject *handle, const QString &message)
+void GameManager::performChat(QObject *handle, const QString &message)
 {
     if (!m_playerProperties.contains(handle)) {
         return;
     }
-    emit chatSent(m_playerProperties.value(handle).name(), message);
+    emit chatBroadcasted(m_playerProperties.value(handle).name(), message);
 }
 
 void GameManager::performAction(QObject *handle, int tokenCount)
@@ -121,7 +147,7 @@ void GameManager::performAction(QObject *handle, int tokenCount)
         // TODO: broadcast some messages, and add some checks here
     }
 
-    performBroadcastPlayers();
+    performGamePropertiesBroadcast();
     nextTurn();
 }
 
@@ -140,21 +166,21 @@ QList<PlayerProperties> GameManager::getPlayers() const
     return players;
 }
 
-void GameManager::performBroadcastPlayers()
+void GameManager::performGamePropertiesBroadcast()
 {
-    emit playersBroadcasted(getPlayers(), m_pot);
+    emit gamePropertiesBroadcasted(getPlayers(), m_pot);
 }
 
 void GameManager::prepareRound()
 {
-    emit newRound();
+    emit newRoundBroadcasted();
 
     if (2 * m_handles.count() + 5 > m_deck.count()) {
         m_deck.reset();
         m_deck.shuffle();
     }
 
-    m_middleCardsState = Initial;
+    m_distributedCardsStatus = Initial;
 
     // All are in game
     foreach (QObject *handle, m_handles) {
@@ -187,7 +213,7 @@ void GameManager::prepareRound()
     secondPlayer.setBetCount(secondPlayer.betCount() + bigBlind);
 
     m_pot = smallBlind + bigBlind;
-    performBroadcastPlayers();
+    performGamePropertiesBroadcast();
 
     m_maxBetHandle = 0;
 
@@ -243,18 +269,18 @@ void GameManager::nextTurn()
 
     if (m_maxBetHandle == m_handles[m_currentPlayer] && equalBetReached) {
         qDebug() << "Player with max bet reached";
-        switch (m_middleCardsState) {
+        switch (m_distributedCardsStatus) {
         case Initial:
             distributeMiddleCards(3);
-            m_middleCardsState = Flop;
+            m_distributedCardsStatus = Flop;
             break;
         case Flop:
             distributeMiddleCards(1);
-            m_middleCardsState = Turn;
+            m_distributedCardsStatus = Turn;
             break;
         case Turn:
             distributeMiddleCards(1);
-            m_middleCardsState = River;
+            m_distributedCardsStatus = River;
             break;
         case River:
             manageDraw();
@@ -293,9 +319,9 @@ void GameManager::cleanUpRound()
 
     // Cleanup hands
     m_hands.clear();
-    emit endRound();
+    emit endRoundBroadcasted();
 
-    performBroadcastPlayers();
+    performGamePropertiesBroadcast();
 
     // Restart a new round
     prepareRound();
@@ -315,7 +341,7 @@ void GameManager::manageDraw()
         }
     }
 
-    emit allCardsSent(hands);
+    emit allCardsBroadcasted(hands);
 
     // Let's compare all the hands
     QMap<Hand, QObject *> handsHandle;

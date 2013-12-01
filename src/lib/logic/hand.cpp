@@ -29,6 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file deck.cpp
+ * @short Implementation of Deck
+ */
+
 #include "hand.h"
 #include <functional>
 #include <QtCore/QMultiMap>

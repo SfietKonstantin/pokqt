@@ -29,9 +29,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */ 
 
+/**
+ * @file client/main.cpp
+ * @short Main client file
+ */
+
 #include <QtGui/QGuiApplication>
 #include <QtQml/qqml.h>
 #include <QtQml/QQmlEngine>
+#include <QtQml/QQmlError>
 #include <QtQuick/QQuickView>
 #include <network/networkclient.h>
 #include "playersmodel.h"
@@ -39,14 +45,45 @@
 #include "handmodel.h"
 #include "cardobject.h"
 
-// "Functor" to be used in Qt compile-time check "connect"
-// Connecting to QCoreApplication::quit fails, because it is
-// a static slot.
+/**
+ * @mainpage PokQt, a simple poker game in Qt
+ *
+ * PokQt is a simple poker game in Qt, done for a school
+ * project. It provides a server and a client, as well as
+ * a GUI written in QtQuick, with QtQuick Controls.
+ */
+
+/**
+ * @todo TODO: be able to disconnect from the game
+ * @todo TODO: add animation and transitions, because some steps of
+ * the game cannot be easily understood
+ * @todo TODO: display the pot
+ */
+
+/**
+ * @brief Namespace for client related classes
+ */
+namespace Client {}
+
+/**
+ * @short Quit function
+ *
+ * This function is a "Functor-like" function to be used
+ * in Qt compile-time check "connect"
+ * Connecting to QCoreApplication::quit fails, because it is
+ * a static slot.
+ */
 void quit()
 {
     QCoreApplication::instance()->quit();
 }
 
+/**
+ * @brief Client main
+ * @param argc argc.
+ * @param argv argv.
+ * @return exit code.
+ */
 int main(int argc, char **argv)
 {
     QGuiApplication app (argc, argv);
@@ -55,13 +92,14 @@ int main(int argc, char **argv)
     QObject::connect(view.engine(), &QQmlEngine::quit, quit);
 
     qmlRegisterType<NetworkClient>("com.ecp.isia.pokqt", 1, 0, "NetworkClient");
-    qmlRegisterType<PlayersModel>("com.ecp.isia.pokqt", 1, 0, "PlayersModel");
-    qmlRegisterType<ClientBetManager>("com.ecp.isia.pokqt", 1, 0, "BetManager");
-    qmlRegisterType<CardObject>("com.ecp.isia.pokqt", 1, 0, "CardObject");
-    qmlRegisterType<HandModel>("com.ecp.isia.pokqt", 1, 0, "HandModel");
+    qmlRegisterType<Client::PlayersModel>("com.ecp.isia.pokqt", 1, 0, "PlayersModel");
+    qmlRegisterType<Client::ClientBetManager>("com.ecp.isia.pokqt", 1, 0, "BetManager");
+    qmlRegisterType<Client::CardObject>("com.ecp.isia.pokqt", 1, 0, "CardObject");
+    qmlRegisterType<Client::HandModel>("com.ecp.isia.pokqt", 1, 0, "HandModel");
 
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:/main.qml"));
+
     view.show();
 
     return app.exec();

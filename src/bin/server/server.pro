@@ -3,7 +3,8 @@ TARGET = pokqt-server
 
 QT = core gui network widgets
 INCLUDEPATH+=../../lib/
-LIBS+=-L../../lib -lpokqt
+unix: LIBS+=-L../../lib/ -lpokqt
+win32: LIBS+=-L../../lib/release -lpokqt
 
 SOURCES += \
     main.cpp \

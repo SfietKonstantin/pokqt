@@ -51,8 +51,7 @@ class Deck
 {
 public:
     /**
-     * @brief Deck
-     * @param parent
+     * @brief Default constructor
      */
     explicit Deck();
     /**

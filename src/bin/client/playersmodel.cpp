@@ -29,8 +29,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file playersmodel.cpp
+ * @short Implementation of Client::HandModel
+ */
+
 #include "playersmodel.h"
 #include <QtCore/QDebug>
+
+namespace Client
+{
 
 PlayersModel::PlayersModel(QObject *parent) :
     QAbstractListModel(parent), m_pot(0), m_client(0)
@@ -166,4 +174,6 @@ void PlayersModel::slotPlayersChanged()
     }
 
     emit dataChanged(index(0), index(newCount - 1));
+}
+
 }

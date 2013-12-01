@@ -29,8 +29,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file clientbetmanager.cpp
+ * @short Implementation of Client::ClientBetManager
+ */
+
 #include "clientbetmanager.h"
 #include <QtCore/QDebug>
+
+namespace Client
+{
 
 ClientBetManager::ClientBetManager(QObject *parent) :
     BetManager(parent), m_check(false), m_client(0)
@@ -121,4 +129,6 @@ void ClientBetManager::slotPlayersChanged()
         m_check = check;
         emit checkChanged();
     }
+}
+
 }

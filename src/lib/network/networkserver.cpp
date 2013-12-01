@@ -42,6 +42,8 @@
 #include "logic/card.h"
 
 /// @todo TODO: don't add too many players. We need that 2 * n_players + 5 <= 52
+/// @todo TODO: we shouldn't be able to start a game with zero / one player.
+/// @todo TODO: handle player disconnections gracefully during game. Right now, the game is stuck.
 
 /**
  * @brief NET_TYPE

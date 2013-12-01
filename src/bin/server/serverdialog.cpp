@@ -29,8 +29,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file serverdialog.cpp
+ * @short Implementation of Server::ServerDialog
+ */
+
 #include "serverdialog.h"
 #include "ui_serverdialog.h"
+
+/**
+ * @todo TODO: we should control when the start game button is enabled. Starting a
+ * game with nobody segfaults
+ */
+
+namespace Server
+{
 
 ServerDialog::ServerDialog(QWidget *parent) :
     QDialog(parent),
@@ -39,7 +52,8 @@ ServerDialog::ServerDialog(QWidget *parent) :
     ui->setupUi(this);
     connect(ui->startPushButton, &QPushButton::clicked, this, &ServerDialog::startClicked);
     connect(ui->stopPushButton, &QPushButton::clicked, this, &ServerDialog::stopClicked);
-    connect(ui->startGamePushButton, &QPushButton::clicked, this, &ServerDialog::slotStartGameClicked);
+    connect(ui->startGamePushButton, &QPushButton::clicked,
+            this, &ServerDialog::slotStartGameClicked);
 }
 
 ServerDialog::~ServerDialog()
@@ -57,8 +71,8 @@ void ServerDialog::startClicked()
     ui->startPushButton->setEnabled(false);
     ui->startGamePushButton->setEnabled(true);
     ui->stopPushButton->setEnabled(true);
-    emit start();
-    emit start(ui->portSpinBox->value());
+    emit started();
+    emit started(ui->portSpinBox->value());
 }
 
 void ServerDialog::stopClicked()
@@ -66,7 +80,7 @@ void ServerDialog::stopClicked()
     ui->startPushButton->setEnabled(true);
     ui->startGamePushButton->setEnabled(false);
     ui->stopPushButton->setEnabled(false);
-    emit stop();
+    emit stopped();
 }
 
 void ServerDialog::slotStartGameClicked()
@@ -74,5 +88,7 @@ void ServerDialog::slotStartGameClicked()
     ui->startPushButton->setEnabled(false);
     ui->startGamePushButton->setEnabled(false);
     ui->stopPushButton->setEnabled(true);
-    emit startGame();
+    emit gameStarted();
+}
+
 }
