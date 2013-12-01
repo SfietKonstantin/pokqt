@@ -29,11 +29,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file deck.cpp
+ * @short Implementation of Deck
+ */
+
 #include "deck.h"
 #include <QtCore/QDateTime>
 
-Deck::Deck(QObject *parent)
-    : QObject(parent)
+Deck::Deck()
 {
 }
 

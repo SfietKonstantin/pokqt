@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     GameManager gameManager;
 
     // Connections between dialog and server
-    QObject::connect(&server, &NetworkServer::displayMessage,
+    QObject::connect(&server, &NetworkServer::info,
                      &dialog, &ServerDialog::displayMessage);
     QObject::connect(&dialog, OSIGNAL(ServerDialog, start, int),
                      &server, &NetworkServer::startServer);
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
                      &gameManager, &GameManager::performAction);
     QObject::connect(&gameManager, &GameManager::endRound, &server, &NetworkServer::sendEndRound);
     QObject::connect(&gameManager, &GameManager::allCardsSent,
-                     &server, &NetworkServer::sendAllCards);
+                     &server, &NetworkServer::sendAllHands);
 
     dialog.show();
 

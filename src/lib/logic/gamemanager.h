@@ -32,6 +32,7 @@
 #ifndef GAMEMANAGER_H
 #define GAMEMANAGER_H
 
+#include "pokqt_global.h"
 #include <QtCore/QObject>
 #include <QtCore/QMap>
 #include "playerproperties.h"
@@ -39,7 +40,7 @@
 #include "hand.h"
 
 class BetManager;
-class GameManager : public QObject
+class POKQTSHARED_EXPORT GameManager : public QObject
 {
     Q_OBJECT
 public:

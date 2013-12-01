@@ -29,14 +29,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file card.cpp
+ * @short Implementation of Card
+ */
+
 #include "card.h"
 
-// TODO: document ranks
-// The number representing the rank goes to -1 to 12
-// -1 is an invalid card,
-// 0 represents 2
-// 8 represents 10
-// 9 10 11 12 are respectively J Q K A
 Card::Card()
     : m_suit(Invalid), m_rank(-1)
 {
@@ -55,6 +54,7 @@ Card::Card(Suit suit, int rank)
     case Diamond:
     case Heart:
     case Spade:
+        // Set suit and rank only if the suit is correct
         m_suit = suit;
         m_rank = rank;
         break;
@@ -81,6 +81,11 @@ bool Card::operator==(const Card &other) const
     return (m_suit == other.suit() && m_rank == other.rank());
 }
 
+bool Card::operator !=(const Card &other) const
+{
+    return !(*this == other);
+}
+
 bool Card::operator<(const Card &other) const
 {
     if (m_rank != other.rank()) {
@@ -90,12 +95,21 @@ bool Card::operator<(const Card &other) const
     return m_suit < other.suit();
 }
 
+bool Card::operator>(const Card &other) const
+{
+    if (m_rank != other.rank()) {
+        return m_rank > other.rank();
+    }
+
+    return m_suit > other.suit();
+}
+
 bool Card::isValid() const
 {
-    // The "create" factory method should guarantee that our cards
-    // are valid, and invalid cases will only be the cases when
+    // The setters and constructors should only generate cards
+    // that are valid, and invalid cases will only be the cases when
     // rank is -1
-    return (m_rank != -1);
+    return (m_rank != -1 && m_suit != Invalid);
 }
 
 Card::Suit Card::suit() const
@@ -113,6 +127,7 @@ void Card::setSuit(Suit suit)
         m_suit = suit;
         break;
     default:
+        m_suit = Invalid;
         break;
     }
 }
@@ -126,6 +141,8 @@ void Card::setRank(int rank)
 {
     if (rank >= 0 && rank <= 12) {
         m_rank = rank;
+    } else {
+        m_rank = -1;
     }
 }
 

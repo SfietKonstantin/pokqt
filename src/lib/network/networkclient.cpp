@@ -141,7 +141,7 @@ void NetworkClient::setPlayers(const QList<PlayerProperties> &players, int index
         m_index = index;
         m_pot = pot;
 
-        emit playersChanged(); // TODO: rename to pot
+        emit playersChanged();
     }
 }
 
@@ -214,6 +214,8 @@ void NetworkClient::reply(MessageType type, const QByteArray &data)
             m_hand.clear();
             emit handChanged();
         }
+        break;
+    case AllCardsType:
         break;
     }
 }

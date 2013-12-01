@@ -32,22 +32,79 @@
 #ifndef DECK_H
 #define DECK_H
 
-#include <QtCore/QObject>
+/**
+ * @file deck.h
+ * @short Definition of Deck
+ */
+
+#include <QtCore/QList>
 #include "card.h"
 
-class Deck: public QObject
+/**
+ * @brief A deck
+ *
+ * This class manages a classic 52-cards. It is able
+ * to create a deck, shuffle it, and distribute cards,
+ * represented by the Card class.
+ */
+class Deck
 {
 public:
-    explicit Deck(QObject *parent = 0);
+    /**
+     * @brief Deck
+     * @param parent
+     */
+    explicit Deck();
+    /**
+     * @brief Get the number of cards in the deck
+     * @return number of cards in the deck.
+     */
     int count() const;
+    /**
+     * @brief Get if the deck is empty
+     * @return if the deck is empty.
+     */
     bool isEmpty() const;
+    /**
+     * @brief Draw a card from the deck
+     * @return card drawn from the deck.
+     */
     Card draw();
-public slots:
+    /**
+     * @brief Clear the deck
+     *
+     * Clear the deck, removing all cards, and leaving
+     * the deck empty.
+     */
     void clear();
+    /**
+     * @brief Reset the deck
+     *
+     * Reset the deck, creating an ordered deck starting
+     * with the 2 of spades, and finishing with the ace of
+     * club.
+     */
     void reset();
+    /**
+     * @brief Shuffle the deck
+     */
     void shuffle();
 private:
+    /**
+     * @internal
+     * @brief Method used to create a deck
+     *
+     * This method is used to create a deck, by
+     * adding all the cards of a given suit to
+     * the deck.
+     *
+     * @param suit suit used.
+     */
     void addCards(Card::Suit suit);
+    /**
+     * @internal
+     * @brief Cards in the deck
+     */
     QList<Card> m_cards;
 };
 

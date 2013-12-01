@@ -32,6 +32,11 @@
 #ifndef NETWORKSERVER_H
 #define NETWORKSERVER_H
 
+/**
+ * @file networkserver.h
+ * @short Definition of NetworkServer
+ */
+
 #include "pokqt_global.h"
 #include "helpers.h"
 #include <QtNetwork/QHostAddress>
@@ -73,7 +78,17 @@ public:
      */
     explicit NetworkServer(QObject *parent = 0);
 signals:
-    void displayMessage(const QString &type, const QString &message);
+    /**
+     * @brief Some info should be displayed
+     *
+     * This signal is emitted in order to be displayed
+     * on some server UI. It informs about the status of
+     * the game or the players.
+     *
+     * @param type type of the information.
+     * @param message message to be displayed.
+     */
+    void info(const QString &type, const QString &message);
 
     /**
      * @brief A player has been added
@@ -184,9 +199,24 @@ public slots:
      * by an update of the player properties.
      */
     void sendEndRound();
-
-    void sendAllCards(const QList<Hand> &hands);
+    /**
+     * @brief Send all hands of the players
+     *
+     * This method is used to broadcast hands of all the
+     * players in order to compare them, if the bet are
+     * equal.
+     *
+     * @param hands hands to be sent.
+     */
+    void sendAllHands(const QList<Hand> &hands);
 private:
+    /**
+     * @internal
+     * @brief Reply to a message received from a socket / handle
+     * @param socket handle to the player.
+     * @param type type of message.
+     * @param data data read from the message.
+     */
     void reply(QTcpSocket *socket, MessageType type, const QByteArray &data);
     /**
      * @internal
@@ -227,6 +257,12 @@ private slots:
      * @brief Slot used to listen to disconnections
      */
     void slotDisconnected();
+    /**
+     * @internal
+     * @brief Slot used to read partial information
+     *
+     * This slot is called when a packet has been received.
+     */
     void slotReadyRead();
 };
 

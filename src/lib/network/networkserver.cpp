@@ -29,6 +29,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
  */
 
+/**
+ * @file networkserver.cpp
+ * @short Implementation of NetworkServer
+ */
+
 #include "networkserver.h"
 #include <QtCore/QDebug>
 #include <QtCore/QDataStream>
@@ -36,9 +41,19 @@
 #include <QtNetwork/QTcpSocket>
 #include "logic/card.h"
 
-// TODO: don't add too many players
+/// @todo TODO: don't add too many players. We need that 2 * n_players + 5 <= 52
 
+/**
+ * @brief NET_TYPE
+ *
+ * Defines a type for NetworkServer::info.
+ */
 static const char *NET_TYPE = "net";
+/**
+ * @brief CHAT_TYPE
+ *
+ * Defines a type for NetworkServer::info.
+ */
 static const char *CHAT_TYPE = "chat";
 
 NetworkServer::NetworkServer(QObject *parent)
@@ -67,7 +82,7 @@ void NetworkServer::stopServer()
 
 void NetworkServer::sendPlayerProperties(const QList<PlayerProperties> &players, int pot)
 {
-    // Send the data to each socket
+    // Send the data to all socket
     for (int i = 0; i < m_sockets.count(); ++i) {
         QByteArray data;
         QDataStream stream (&data, QIODevice::WriteOnly);
@@ -93,7 +108,7 @@ void NetworkServer::sendChat(const QString &name, const QString &message)
     QDataStream stream (&data, QIODevice::WriteOnly);
     stream << name << message;
 
-    displayMessage(CHAT_TYPE, QString("%1: %2").arg(name, message));
+    info(CHAT_TYPE, QString("%1: %2").arg(name, message));
 
     foreach (QTcpSocket *socket, m_sockets) {
         sendMessage(socket, ChatType, data);
@@ -150,7 +165,7 @@ void NetworkServer::sendEndRound()
     }
 }
 
-void NetworkServer::sendAllCards(const QList<Hand> &hands)
+void NetworkServer::sendAllHands(const QList<Hand> &hands)
 {
     // Send all hands of people who didn't fold
     QByteArray data;
@@ -201,7 +216,7 @@ void NetworkServer::slotNewConnection()
     connect(socket, &QTcpSocket::readyRead, this, &NetworkServer::slotReadyRead);
 
     m_sockets.append(socket);
-    emit displayMessage(NET_TYPE, "New connection");
+    emit info(NET_TYPE, "New connection");
 }
 
 void NetworkServer::slotDisconnected()
@@ -220,7 +235,7 @@ void NetworkServer::slotDisconnected()
 
     emit playerRemoved(socket);
     socket->deleteLater();
-    emit displayMessage(NET_TYPE, "Disconnection");
+    emit info(NET_TYPE, "Disconnection");
 }
 
 void NetworkServer::slotReadyRead()

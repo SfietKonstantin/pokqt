@@ -43,7 +43,8 @@
  *
  * This class stores properties of a give player.
  * For a poker game, you usually needs to store the
- * nickname, and number of tokens you still have.
+ * nickname, and number of tokens you still have and
+ * have bet.
  *
  * This class is both used in server side and client
  * side to store the current state of the game.
@@ -59,6 +60,11 @@ public:
      * @brief Default constructor
      */
     explicit PlayerProperties();
+    /**
+     * @brief Assignation
+     * @param other other PlayerProperties to copy.
+     * @return reference to this object.
+     */
     PlayerProperties & operator=(const PlayerProperties &other);
     /**
      * @brief Get player's name
@@ -80,9 +86,25 @@ public:
      * @param tokens player's token count to set.
      */
     void setTokenCount(int tokenCount);
+    /**
+     * @brief Get the number of tokens the player has bet
+     * @return the number of tokens the player has bet.
+     */
     int betCount() const;
+    /**
+     * @brief Set the number of tokens the player has bet
+     * @param betCount the number of tokens the player has bet to set.
+     */
     void setBetCount(int betCount);
+    /**
+     * @brief Get if the player is still in game
+     * @return if the player is still in game.
+     */
     bool isInGame() const;
+    /**
+     * @brief Set if the player is still in game
+     * @param inGame if the player is still in game.
+     */
     void setInGame(bool inGame);
     /**
      * @brief Equality
@@ -105,7 +127,15 @@ private:
      * @brief Player's token count
      */
     int m_tokenCount;
+    /**
+     * @internal
+     * @brief The number of tokens the player has bet
+     */
     int m_betCount;
+    /**
+     * @internal
+     * @brief If the player is still in game
+     */
     bool m_inGame;
 };
 

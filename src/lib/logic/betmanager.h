@@ -4,6 +4,16 @@
 #include <QtCore/QObject>
 #include "playerproperties.h"
 
+/**
+ * @brief Manage the bet range
+ *
+ * This class computes the range of tokens
+ * that have to be bet. minBet() provides the
+ * current status of the bet, and the minimal step
+ * to bet in order to be able to "call", and maxBet()
+ * provides the highest step, that is the total number
+ * of tokens of the weakest player.
+ */
 class BetManager: public QObject
 {
     Q_OBJECT

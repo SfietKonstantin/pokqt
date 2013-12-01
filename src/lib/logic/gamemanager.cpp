@@ -34,10 +34,11 @@
 #include <QtCore/QDateTime>
 #include "betmanager.h"
 
+
 static const int INITIAL_TOKEN_COUNT = 1000;
 static const int SMALL_BLIND = 10;
 static const int BIG_BLIND = 20;
-
+/// @todo TODO: We shouldn't put blinds and token count as constant.
 
 GameManager::GameManager(QObject *parent) :
     QObject(parent), m_status(Invalid), m_middleCardsState(Initial), m_initialPlayer(-1)
@@ -196,11 +197,16 @@ void GameManager::prepareRound()
         m_maxBetHandle = m_handles[m_initialPlayer];
     }
 
+    qDebug() << m_currentPlayer << m_handles;
+
     emit playerTurnSelected(m_handles[m_currentPlayer]);
 }
 
 void GameManager::nextTurn()
 {
+    qDebug() << "Current player (who finished): " << m_currentPlayer;
+
+
     // Check if the game is finished
     int inGameCount = 0;
     foreach (QObject *handle, m_handles) {
@@ -264,7 +270,9 @@ void GameManager::nextTurn()
         ok = m_playerProperties.value(m_handles[indexNext]).isInGame();
     }
 
-    qDebug() << "Next player selected" << indexNext;
+    qDebug() << "Current max" << m_maxBetHandle;
+    qDebug() << "Next player selected" << indexNext
+             << m_playerProperties.value(m_handles[indexNext]).name() << m_handles[indexNext];
     m_currentPlayer = indexNext;
 
     emit playerTurnSelected(m_handles[m_currentPlayer]);
